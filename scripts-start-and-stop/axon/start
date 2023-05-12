@@ -1,0 +1,55 @@
+#!/bin/bash
+
+#
+# Check the README.md file before run.
+# Last update: 16/01/2023
+#
+
+LOG_DIR="$HOME/autopatch/logs"
+EVENT_MONITOR=1
+BASESRVS=22
+
+TOTSRVS=$((BASESRVS + EVENT_MONITOR))
+
+# write the output of the script to a log file
+# The -a flag tells tee to append to the file rather than overwriting it
+# The -i flag tells tee to ignore the interrupt signal (CTRL-C)
+exec &> >(tee -ai "$LOG_DIR/logs\start-$(date -d "today" +"%Y-%m-%d").log")
+
+NSRVS=$($AXON_BASE/axonhome/third-party-app/scripts/axonStatus | awk '/ 1 / {print}' | wc -l)
+printf '%s: N.SERVICES: %s\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$NSRVS"
+
+# if Axon is down, I will start it...
+if [ "$NSRVS" -eq 0 ]
+then
+    # note: we check the status before running the startup because the command 
+    # will restart the Axon services 
+    $AXON_BASE/bin/startup.sh
+
+    NSRVS=$($AXON_BASE/axonhome/third-party-app/scripts/axonStatus | awk '/ 1 / {print}' | wc -l)
+    printf '%s: N.SERVICES: %s, TOT.SERVICES: %s\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$NSRVS" "$TOTSRVS"
+
+    if [ "$NSRVS" -eq "$TOTSRVS" ]
+    then
+        # all services are up
+        NSRVS_OUT=$($AXON_BASE/axonhome/third-party-app/scripts/axonStatus)
+        printf '%s: All configured services are up:\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+        printf '%s\n' "$NSRVS_OUT"
+
+        exit 0
+
+    else
+        # some service have problems during startup, with status 0 or -1
+        NSRVS_OUT=$($AXON_BASE/axonhome/third-party-app/scripts/axonStatus | awk 'NR==5 || !/ 1 / {print}')
+        printf '%s: Some services report some issues during startup:\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+        printf '%s\n' "$NSRVS_OUT"
+
+        exit 1
+    
+    fi
+
+fi
+
+printf '%s: Axon is already running.\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+
+exit 0
