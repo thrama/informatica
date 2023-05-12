@@ -1,0 +1,72 @@
+csvDatabaseEmpty = [{
+                'id':'',
+                'name':'',
+                'Last Modified':'',
+                'GDPR Data Processing note':'',
+                'GDPR Data Processing note modifiedby':'',
+                'Architectural Level':'',
+                'Architectural Level modifiedBy':'',
+                'Business Description':'',
+                'Business Description modifiedBy':'',
+                'System Case':'',
+                'System Type':'',
+                'System Minor Version':'',
+                'Store Type':'',
+                'System Release Version':'',
+                'System Major Version':'',
+                'Resource Type':'',
+                'Resource Name':''
+                
+            }]
+csvSchemaEmpty = [{
+                'id':'',
+                'Last Modified':'',
+                'name':'',
+                'GDPR Data Processing note':'',
+                'GDPR Data Processing note modifiedBy':'',
+                'Architectural Level':'',
+                'Architectural Level modifiedBy':'',
+                'Business Description':'',
+                'Business Description modifiedBy':'',
+                'Resource Name':'',
+                'Database id':''
+                }]
+csvTableEmpty = [{
+                'id':'',
+                'Last Modified':'',
+                'GDPR Data Processing note':'',
+                'GDPR Data Processing note modifiedBy':'',
+                'Data Quality Link':'',
+                'Data Quality Link modifiedBy':'',
+                'Business Description':'',
+                'Business Description modifiedBy':'',
+                'Native Type':'',
+                'Resource Name':'',
+                'Name':'',
+                'Schema id':''
+                }]
+csvColumnEmpty = [{
+                'id':'',
+                'name':'',
+                'Last Modified':'',
+                'Key Data Element':'',
+                'Key Data Element modifiedBy':'',
+                'GDPR Data Processing note':'',
+                'GDPR Data Processing note modifiedBy':'',
+                'Data Quality Link':'',
+                'Data Quality Link modifiedBy':'',
+                'Asset Classification':'',
+                'Asset Classification modifiedBy':'',
+                'Business Description':'',
+                'Business Description modifiedBy':'',
+                'Datatype Scale':'',
+                'Position':'',
+                'Identity':'',
+                'Native Type':'',
+                'Primary Key Column':'',
+                'Nullable':'',
+                'Datatype Length':'',
+                'Datatype':'',
+                'Resource Name':'',
+                'TableView id':''
+                }]
