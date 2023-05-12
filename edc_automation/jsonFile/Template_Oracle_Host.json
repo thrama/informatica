@@ -1,0 +1,350 @@
+{
+    "resourceIdentifier": {
+        "description": " ",
+        "resourceName": "$ResourceName",
+        "resourceTypeId": "Oracle",
+        "resourceTypeName": "Oracle",
+        "resourceTypeVersion": ""
+    },
+    "scannerConfigurations": [
+        {
+            "configOptions": [
+                {
+                    "optionId": "ScannerExecutionMode",
+                    "optionValues": [
+                        "normal"
+                    ]
+                },
+                {
+                    "optionId": "Host",
+                    "optionValues": [
+                        "$Host"
+                    ]
+                },
+                {
+                    "optionId": "Port",
+                    "optionValues": [
+                        $Port
+                    ]
+                },
+                {
+                    "optionId": "Service",
+                    "optionValues": [
+                        "$Service"
+                    ]
+                },
+                {
+                    "optionId": "User",
+                    "optionValues": [
+                        "$UserMetadati"
+                    ]
+                },
+                {
+                    "optionId": "Import system objects",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Tables, Views",
+                    "optionValues": [
+                        "All"
+                    ]
+                },
+                {
+                    "optionId": "Import stored procedures",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Import Private and Public Synonyms",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Case Sensitive",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Import Database Name",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Memory",
+                    "optionValues": [
+                        "Low"
+                    ]
+                },
+                {
+                    "optionId": "TrackSourceChanges",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Schema",
+                    "optionValues": [
+                        "$Database"
+                    ]
+                },
+                {
+                    "optionId": "Password",
+                    "optionValues": [
+                        "$PasswordUserMetadati"
+                    ]
+                }
+            ],
+            "enabled": $EnableSourceMetadata,
+            "scanner": {
+                "providerTypeId": "CORE",
+                "providerTypeName": "Source Metadata",
+                "scannerId": "OracleScanner"
+            }
+        },
+        {
+            "configOptions": [
+                {
+                    "optionId": "SelectCompositeDataDomains",
+                    "optionValues": [
+                        "AllCompositeDataDomains"
+                    ]
+                }
+            ],
+            "enabled": false,
+            "scanner": {
+                "providerTypeId": "CompositeDomainDiscovery",
+                "providerTypeName": "Composite Domain Discovery",
+                "scannerId": "CompositeDomainScanner"
+            }
+        },
+        {
+            "configOptions": [
+                {
+                    "optionId": "DiscoveryOption",
+                    "optionValues": [
+                        "Profiling"
+                    ]
+                },
+                {
+                    "optionId": "runOnHadoop",
+                    "optionValues": [
+                        "Native"
+                    ]
+                },
+                {
+                    "optionId": "ProfilingRunOptions",
+                    "optionValues": [
+                        "ColumnProfilingAndDomainDiscovery"
+                    ]
+                },
+                {
+                    "optionId": "SamplingOptions",
+                    "optionValues": [
+                        "$SamplingOption"
+                    ]
+                },
+                {
+                    "optionId": "RunSimilarityProfile",
+                    "optionValues": [
+                        "$RunSimilarityProfile"
+                    ]
+                },
+                {
+                    "optionId": "Priority",
+                    "optionValues": [
+                        "low"
+                    ]
+                },
+                {
+                    "optionId": "ExcludeViews",
+                    "optionValues": [
+                        $ExcludeViews
+                    ]
+                },
+                {
+                    "optionId": "Incremental",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "isCumulative",
+                    "optionValues": [
+                        $Cumulative 
+                    ]
+                },
+                {
+                    "optionId": "enableProfileValidation",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "ProfileableObjectsFilterRegex",
+                    "optionValues": [
+                        "All"
+                    ]
+                },
+                {
+                    "optionId": "securityDomain",
+                    "optionValues": [
+                        "Native"
+                    ]
+                },
+                {
+                    "optionId": "domainName",
+                    "optionValues": [
+                        "$$domainName"
+                    ]
+                },
+                {
+                    "optionId": "disName",
+                    "optionValues": [
+                        "$$disName"
+                    ]
+                },
+                {
+                    "optionId": "userName",
+                    "optionValues": [
+                        "$$disUser"
+                    ]
+                },
+                {
+                    "optionId": "host",
+                    "optionValues": [
+                        "$$disHost"
+                    ]
+                },
+                {
+                    "optionId": "port",
+                    "optionValues": [
+                        $$disPort
+                    ]
+                },
+                {
+                    "optionId": "OsProfile",
+                    "optionValues": []
+                },
+                {
+                    "optionId": "SourceEdrConnName",
+                    "optionValues": [
+                        "$SourceConnectionName"
+                    ]
+                },
+                {
+                    "optionId": "SamplingOptions1",
+                    "optionValues": [
+                        "SameAsProfileConfiguration"
+                    ]
+                },
+                {
+                    "optionId": "SimilarityDISConnectionOption",
+                    "optionValues": [
+                        "SameAsProfileConfiguration"
+                    ]
+                },
+                {
+                    "optionId": "SaveSourceData",
+                    "optionValues": [
+                        "true"
+                    ]
+                },
+                {
+                    "optionId": "RandomSamplingRows",
+                    "optionValues": [
+                        $RandomSamplingRows
+                    ]
+                },
+                {
+                    "optionId": "DomainDiscoveryType",
+                    "optionValues": [
+                        "MetadataAndData"
+                    ]
+                },
+                {
+                    "optionId": "SelectDataDomains",
+                    "optionValues": [
+                        "DataDomainGroups"
+                    ]
+                },
+                {
+                    "optionId": "DataDomainGroups",
+                    "optionValues": [
+                        $DataDomainGroups
+                    ]
+                },
+                {
+                    "optionId": "excludeNullRecord",
+                    "optionValues": [
+                        $ExcludeNullValues
+                    ]
+                },
+                {
+                    "optionId": "DataDomainConformanceOption",
+                    "optionValues": [
+                        "DataDomain"
+                    ]
+                },
+                {
+                    "optionId": "ConfCriteria",
+                    "optionValues": [
+                        "Percentage"
+                    ]
+                },
+                {
+                    "optionId": "RunUkInference",
+                    "optionValues": [
+                        "true"
+                    ]
+                },
+                {
+                    "optionId": "UkSamplingOptions",
+                    "optionValues": [
+                        "NoSampling"
+                    ]
+                },
+                {
+                    "optionId": "password",
+                    "optionValues": [
+                        "$$disPassword"
+                    ]
+                }
+            ],
+            "enabled": true,
+            "reusableConfigs": [
+                {
+                    "name": "$$disDefault",
+                    "optionGroupId": "DISConnection",
+                    "type": "DISOptionsID"
+                }
+            ],
+            "scanner": {
+                "providerTypeId": "Profiling",
+                "providerTypeName": "Data Discovery",
+                "scannerId": "ProfileScanner"
+            }
+        },
+        {
+            "configOptions": [
+                {
+                    "optionId": "isUseSynonymsAndStopWords",
+                    "optionValues": [
+                        false
+                    ]
+                }
+            ],
+            "enabled": false,
+            "scanner": {
+                "providerTypeId": "BusinessTermAssociation",
+                "providerTypeName": "Business Term Association",
+                "scannerId": "TermAssociationScanner"
+            }
+        }
+    ]
+}

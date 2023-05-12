@@ -1,0 +1,366 @@
+{
+    "resourceIdentifier": {
+        "description": " ",
+        "resourceName": "ssa8T_CISW0_SQL_CISW0_DOM",
+        "resourceTypeId": "MSSqlServer",
+        "resourceTypeName": "Microsoft SQL Server",
+        "resourceTypeVersion": ""
+    },
+    "scannerConfigurations": [
+        {
+            "configOptions": [
+                {
+                    "optionId": "ScannerExecutionMode",
+                    "optionValues": [
+                        "normal"
+                    ]
+                },
+                {
+                    "optionId": "AuthenticationMode",
+                    "optionValues": [
+                        "windows"
+                    ]
+                },
+                {
+                    "optionId": "Host",
+                    "optionValues": [
+                        "PDBCLT049.syssede.systest.sanpaoloimi.com"
+                    ]
+                },
+                {
+                    "optionId": "Port",
+                    "optionValues": [
+                        1433
+                    ]
+                },
+                {
+                    "optionId": "Instance",
+                    "optionValues": []
+                },
+                {
+                    "optionId": "Database",
+                    "optionValues": [
+                        "CISW0"
+                    ]
+                },
+                {
+                    "optionId": "AgentURL",
+                    "optionValues": [
+                        "http://scapmot0712.syssede.systest.sanpaoloimi.com:19980/MIMBWebServices"
+                    ]
+                },
+                {
+                    "optionId": "EnableReferenceResource",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Import system objects",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Tables, Views",
+                    "optionValues": []
+                },
+                {
+                    "optionId": "Import stored procedures",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Import Private and Public Synonyms",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Case Sensitive",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Memory",
+                    "optionValues": [
+                        "Low"
+                    ]
+                },
+                {
+                    "optionId": "TrackSourceChanges",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "AutoAssignConnections",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Schema",
+                    "optionValues": [
+                        "dbo"
+                    ]
+                },
+                {				 
+                    "optionId": "Password",
+                    "optionValues": [
+                        "*************"
+                    ]
+                }
+            ],
+            "enabled": true,
+            "scanner": {
+                "providerTypeId": "CORE",
+                "providerTypeName": "Source Metadata",
+                "scannerId": "MSSQLServerScanner"
+            }
+        },
+        {
+            "configOptions": [
+                {
+                    "optionId": "SelectCompositeDataDomains",
+                    "optionValues": [
+                        "AllCompositeDataDomains"
+                    ]
+                }
+            ],
+            "enabled": false,
+            "scanner": {
+                "providerTypeId": "CompositeDomainDiscovery",
+                "providerTypeName": "Composite Domain Discovery",
+                "scannerId": "CompositeDomainScanner"
+            }
+        },
+        {
+            "configOptions": [
+                {
+                    "optionId": "DiscoveryOption",
+                    "optionValues": [
+                        "Profiling"
+                    ]
+                },
+                {
+                    "optionId": "runOnHadoop",
+                    "optionValues": [
+                        "Native"
+                    ]
+                },
+                {
+                    "optionId": "ProfilingRunOptions",
+                    "optionValues": [
+                        "ColumnProfilingAndDomainDiscovery"
+                    ]
+                },
+                {
+                    "optionId": "SamplingOptions",
+                    "optionValues": [
+                        "RandomSampling"
+                    ]
+                },
+                {
+                    "optionId": "RunSimilarityProfile",
+                    "optionValues": [
+                        "true"
+                    ]
+                },
+                {
+                    "optionId": "Priority",
+                    "optionValues": [
+                        "low"
+                    ]
+                },
+                {
+                    "optionId": "ExcludeViews",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "Incremental",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "isCumulative",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "enableProfileValidation",
+                    "optionValues": [
+                        false
+                    ]
+                },
+                {
+                    "optionId": "ProfileableObjectsFilterRegex",
+                    "optionValues": [
+                        "All"
+                    ]
+                },
+                {
+                    "optionId": "securityDomain",
+                    "optionValues": [
+                        "Native"
+                    ]
+                },
+                {
+                    "optionId": "SamplingOptions1",
+                    "optionValues": [
+                        "SameAsProfileConfiguration"
+                    ]
+                },
+                {
+                    "optionId": "SimilarityDISConnectionOption",
+                    "optionValues": [
+                        "SameAsProfileConfiguration"
+                    ]
+                },
+                {
+                    "optionId": "domainName",
+                    "optionValues": [
+                        "DMN_EDC_SEDC00"
+                    ]
+                },
+                {
+                    "optionId": "disName",
+                    "optionValues": [
+                        "DIS_EDC_SEDC00"
+                    ]
+                },
+                {
+                    "optionId": "userName",
+                    "optionValues": [
+                        "Administrator"
+                    ]
+                },
+                {
+                    "optionId": "host",
+                    "optionValues": [
+                        "salclt1179.syssede.systest.sanpaoloimi.com"
+                    ]
+                },
+                {
+                    "optionId": "port",
+                    "optionValues": [
+                        6005
+                    ]
+                },
+                {
+                    "optionId": "OsProfile",
+                    "optionValues": []
+                },
+                {
+                    "optionId": "SourceEdrConnName",
+                    "optionValues": [
+                        "ssa8T_CISW0_SQL_CISW0_DOM"
+                    ]
+                },
+                {
+                    "optionId": "SaveSourceData",
+                    "optionValues": [
+                        "true"
+                    ]
+                },
+                {
+                    "optionId": "DomainDiscoveryType",
+                    "optionValues": [
+                        "MetadataAndData"
+                    ]
+                },
+                {
+                    "optionId": "SelectDataDomains",
+                    "optionValues": [
+                        "DataDomainGroups"
+                    ]
+                },
+                {
+                    "optionId": "DataDomainGroups",
+                    "optionValues": [
+                        "GDPR_DATO_ANAGRAFICO",
+                        "GDPR_DATO_BANCARIO_E_OPERATIVO",
+                        "GDPR"
+                    ]
+                },
+                {
+                    "optionId": "excludeNullRecord",
+                    "optionValues": [
+                        true
+                    ]
+                },
+                {
+                    "optionId": "DataDomainConformanceOption",
+                    "optionValues": [
+                        "DataDomain"
+                    ]
+                },
+                {
+                    "optionId": "ConfCriteria",
+                    "optionValues": [
+                        "Percentage"
+                    ]
+                },
+                {
+                    "optionId": "RunUkInference",
+                    "optionValues": [
+                        "true"
+                    ]
+                },
+                {
+                    "optionId": "UkSamplingOptions",
+                    "optionValues": [
+                        "NoSampling"
+                    ]
+                },
+                {
+                    "optionId": "RandomSamplingRows",
+                    "optionValues": [
+                        17000
+                    ]
+                },
+                {
+                    "optionId": "password",
+                    "optionValues": [
+                        "*************"
+                    ]
+                }
+            ],
+            "enabled": true,
+            "reusableConfigs": [
+                {
+                    "name": "DIS_Default_SEDC00",
+                    "optionGroupId": "DISConnection",
+                    "type": "DISOptionsID"
+                }
+            ],
+            "scanner": {
+                "providerTypeId": "Profiling",
+                "providerTypeName": "Data Discovery",
+                "scannerId": "ProfileScanner"
+            }
+        },
+        {
+            "configOptions": [
+                {
+                    "optionId": "isUseSynonymsAndStopWords",
+                    "optionValues": [
+                        false
+                    ]
+                }
+            ],
+            "enabled": false,
+            "scanner": {
+                "providerTypeId": "BusinessTermAssociation",
+                "providerTypeName": "Business Term Association",
+                "scannerId": "TermAssociationScanner"
+            }
+        }
+    ]
+}
