@@ -1,0 +1,31 @@
+{
+   "id":"GROUP_$groupDomain\\$group",
+   "href":"/1/catalog/security/accessFilters/GROUP_$groupDomain~5c~$group",
+   "memberName":"$groupDomain\\$group",
+   "memberType":"GROUP",
+   "permissions":[
+      {
+         "resourceName":"DataDomain",
+         "classFilters":[
+            {
+               "className":"core.IClass",
+               "permission":"READ_WRITE",
+               "canReadData":false
+            }
+         ]
+      },
+      {
+         "resourceName":"DataDomainGroup",
+         "classFilters":[
+            {
+               "className":"core.IClass",
+               "permission":"READ_WRITE",
+               "canReadData":false
+            }
+         ]
+      }
+   ],
+   "resourceConfigPermissions":[
+      
+   ]
+}
