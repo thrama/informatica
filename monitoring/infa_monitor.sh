@@ -47,7 +47,7 @@ if [ -n "$not_alive_rows" ]; then
     smtp_server="smtpapp.corp.generali.net"
     smtp_port="25"
     email_subject="Warning: service not 'ALIVE' checked"
-    email_body="It seems that the followinf service are not ALIVE:\n\n$non_alive_rows"
+    email_body="It seems that the followinf service are not ALIVE:\n\n$not_alive_rows"
 
     # send the email...
     echo -e "$email_body" | /usr/bin/mail -S smtp="$smtp_server:$smtp_port" -r "$from_email" -s "$email_subject" "$to_email"
