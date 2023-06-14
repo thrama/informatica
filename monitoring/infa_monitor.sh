@@ -7,13 +7,13 @@
 # Last update: 07/06/2023
 #
 
-INFADOMAIN = DMN_GEN_DEV
+infaDomain = DMN_GEN_DEV
 
 ########## MONITOR ##########
 
 # run the command that pings all nodes and services in a domain to displays the status of the domain, nodes, and services
 # doc link: https://docs.informatica.com/data-quality-and-governance/informatica-data-quality/10-5-1/command-reference/infacmd-isp-command-reference/pingdomain.html
-output=$(infacmd.sh isp PingDomain -dn "$INFADOMAIN" -un Administrator -pd N0des#2020#Dei# -Format CSV)
+output=$(infacmd.sh isp PingDomain -dn ${infaDomain} -un Administrator -pd N0des#2020#Dei# -Format CSV)
 
 if [ $? -eq 0 ]; then
 
@@ -31,7 +31,7 @@ if [ $? -eq 0 ]; then
 
         # check if there are any rows that did not contain "ALIVE"
         if [[ ! "$line" =~ "ALIVE" ]]; then
-            not_alive_rows+="$line\n"
+            not_alive_rows+="${line}\n"
         fi
 
     done <<< "$output"
@@ -40,11 +40,11 @@ if [ $? -eq 0 ]; then
     echo -e "$not_alive_rows"
 
     email_subject="Warning: service(s) not 'ALIVE' checked"
-    email_body="It seems that the following service are not ALIVE:\n\n$not_alive_rows"
+    email_body="It seems that the following service are not ALIVE:\n\n${not_alive_rows}"
 
 else
     email_subject="Warning: service(s) not 'ALIVE' checked"
-    email_body="It seems that the Informatica domain "$INFADOMAIN" is down."
+    email_body="It seems that the Informatica domain ${infaDomain} is down."
 
 fi
 
@@ -60,6 +60,6 @@ if [ -n "$not_alive_rows" ]; then
     smtp_port="25"
 
     # send the email...
-    echo -e "$email_body" | /usr/bin/mail -S smtp="$smtp_server:$smtp_port" -r "$from_email" -s "$email_subject" "$to_email"
+    echo -e "${email_body}" | /usr/bin/mail -S smtp="${smtp_server}:${smtp_port}" -r "${from_email}" -s "${email_subject}" "${to_email}"
 
 fi
