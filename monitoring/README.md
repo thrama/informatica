@@ -21,7 +21,7 @@ This script monitors the status of an Informatica domain, nodes, and services by
 
    ```bash
    ./informatica_domain_monitor.sh
-
+   ```
 
 ## Script Flow
 The script runs the `infacmd.sh isp PingDomain` command to retrieve the status of the Informatica domain, nodes, and services.
