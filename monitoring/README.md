@@ -26,9 +26,9 @@ This script monitors the status of an Informatica domain, nodes, and services by
 ## Ouptut
 The output of the script is an email notification that notifies the users about two monitored cases:
 
-1. An <span style="color:red">error</span> if the Informatica Domain is down.
+1. An **error** if the Informatica Domain is down.
 
-2. A <span style="color:yellow">warning</span> if one or more services are not 'ALIVE'.
+2. A **warning** if one or more services are not 'ALIVE'.
 
 In the second case, the email will list the services that are in a state different from 'ALIVE'.
 
