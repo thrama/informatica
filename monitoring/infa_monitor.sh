@@ -12,7 +12,8 @@ sendNotification=0
 # configurations for the notification email
 #fromEmail="adadev-noreply@generali.com"  # Dev
 fromEmail="ada-noreply@generali.com"  # Prod
-toEmail="mgs.CSC.PH@msg-global.com, ada.support@nttdata.com"
+#toEmail="mgs.CSC.PH@msg-global.com, ada.support@nttdata.com"
+toEmail="ada.support@nttdata.com"
 smtpServer="smtpapp.corp.generali.net"
 smtpPort="25"
 
@@ -41,7 +42,7 @@ if [[ ! "$output" =~ "NOT_ALIVE" ]]; then
 
         # check if there are any rows that did not contain "ALIVE"
         if [[ ! "$line" =~ "ALIVE" ]]; then
-            not_alive_rows+="$line\n"
+            not_alive_rows+="$(echo "$line" | cut -d',' -f1)\n"
         fi
 
     done <<< "$output"
@@ -54,7 +55,7 @@ if [[ ! "$output" =~ "NOT_ALIVE" ]]; then
         sendNotification=1
 
         emailSubject="Service ITCF-APP-0214 | ADA Informatica Service Unavailability"
-        emailBody="Following services are not in state ALIVE:\n\n$not_alive_rows"
+        emailBody="Following services are not in state ALIVE:\n$not_alive_rows"
 
     fi
 
@@ -73,9 +74,9 @@ fi
 if [ "$sendNotification" -eq 1 ]; then
 
     # send the email...
-    echo -e "$emailBody" | /usr/bin/mail -S smtp="$smtpServer:$smtpPort" -r "$fromEmail" -s "$emailSubject" "$toEmail"
+    #echo -e "$emailBody" | /usr/bin/mail -S smtp="$smtpServer:$smtpPort" -r "$fromEmail" -s "$emailSubject" "$toEmail"
 
     # debug
-    #printf "emailSubject: %s - emailBody: %s" "$emailBody" "$emailSubject"
+    printf "emailSubject: %s - emailBody: %s" "$emailBody" "$emailSubject"
 
 fi
