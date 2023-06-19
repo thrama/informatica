@@ -41,6 +41,25 @@ The script runs the `infacmd.sh isp PingDomain` command to retrieve the status o
 3. If the Informatica domain itself is down, a separate email is sent to notify about the domain outage.
 4. The script uses the `mail` command-line utility to send email notifications. Make sure it is properly configured on your system.
 
+## Crontab
+To execute a script from the crontab as the "infadei" user with the correct environment variables, you can use the su command in the crontab. Here's an example of how you can set up the crontab to run a script as the "infadei" user:
+
+1. Open the crontab for the desired user using the command:
+   ```bash
+   crontab -e -u infadei
+   ```
+
+2. Add the following line to specify the execution of the script as the "infadei" user:
+   ```bash
+   * * * * * su - infadei -c "/pathto/infa_monitor.sh"
+   ```
+
+3. Save the file and exit the crontab editor.
+
+With this approach, the crontab will execute the script as the "infadei" user and use the environment variables associated with that user.
+
+> **Note:** "infadei" is the Linux user running the Informatica platform, which can change across different environments and products.
+
 ## Proposed Evolutions
 - Modify the script to insert a distinction between core and non-core services.
 - If the script reports an error, insert intelligent management of the following checks and notifications. For example, the script doesn't send further notifications for an hour.
