@@ -5,7 +5,7 @@ This script monitors the status of an Informatica domain, nodes, and services by
 ## Prerequisites
 
 - The Informatica Command Line Utilities (`infacmd.sh`) must be installed and accessible in the system's PATH.
-- The environment variables INFA_DEFAULT_DOMAIN, INFA_DEFAULT_DOMAIN_USER, and INFA_DEFAULT_DOMAIN_PASSWORD need to be declared. If not, the command `infacmd.sh` will fail.
+- The environment variables `INFA_DEFAULT_DOMAIN`, `INFA_DEFAULT_DOMAIN_USER`, and `INFA_DEFAULT_DOMAIN_PASSWORD` need to be declared. If not, the command `infacmd.sh` will fail.
 - The `mail` command-line utility should be installed for sending email notifications.
 
 ## Usage
@@ -24,10 +24,6 @@ This script monitors the status of an Informatica domain, nodes, and services by
    ```
 
 > **Note:** the script must executed with the user that ran the the Informatica domain.
-
-INFA_DEFAULT_DOMAIN
-INFA_DEFAULT_DOMAIN_USER
-INFA_DEFAULT_DOMAIN_PASSWORD
 
 ## Ouptut
 The output of the script is an email notification that notifies the users about two monitored cases:
