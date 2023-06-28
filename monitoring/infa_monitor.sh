@@ -1,15 +1,15 @@
 #!/bin/bash
 
-#. setEnv
+# This bash script is used to monitor the status of Informatica services in a domain. It sends email notifications if any services 
+# or the Informatica domain itself are down. If you want to run this script from the crontab, uncomment the line that sources .bash_profile.
 
-#
-# Check the README.md file before run.
-# Last update: 07/06/2023
-#
+# If you are running this script as a cron job, the environment might not be fully set up. In such cases, uncomment the line below.
+# This line sources the '.bash_profile' from your home directory, ensuring that the environment variables and settings 
+# that the script relies on are properly loaded. If your '.bash_profile' or equivalent file is in a different location, adjust the path accordingly.
+source /home/infadei/.bash_profile
 
-sendNotification=0
 
-# configurations for the notification email
+# Specify email configurations. Adjust the email addresses and SMTP server details as necessary.
 #fromEmail="adadev-noreply@generali.com"  # Dev
 fromEmail="ada-noreply@generali.com"  # Prod
 #toEmail="mgs.CSC.PH@msg-global.com, ada.support@nttdata.com"
@@ -17,66 +17,65 @@ toEmail="ada.support@nttdata.com"
 smtpServer="smtpapp.corp.generali.net"
 smtpPort="25"
 
+# By default, we don't want to send a notification unless an issue is found.
+sendNotification=0
 
-########## MONITOR ##########
+# Use the 'infacmd.sh isp PingDomain' command to ping all nodes and services in the Informatica domain and get their statuses.
+output=$(infacmd.sh isp PingDomain -Format CSV) || { echo "Command failed"; exit 1; }
+#printf "output: %s\n" "$output"  #debug
 
-# run the command that pings all nodes and services in a domain to displays the status of the domain, nodes, and services
-# doc link: https://docs.informatica.com/data-quality-and-governance/informatica-data-quality/10-5-1/command-reference/infacmd-isp-command-reference/pingdomain.html
-output=$(infacmd.sh isp PingDomain -Format CSV)
+# Count the total number of lines in the output
+total_line_count=$(echo "$output" | wc -l)
+#printf "total_line_count: %s\n" "$total_line_count"  #debug
 
+# Check if the output has exactly one line and it contains "NOT_ALIVE"
+if [[ "$total_line_count" -eq 1 ]] && [[ "$output" =~ "NOT_ALIVE" ]]; then
+    #printf "Domain DOWN\n"  #debug
 
-if [[ ! "$output" =~ "NOT_ALIVE" ]]; then
-    # the Informatica domain replied to the command, so it checks for service issues
+    # If the Informatica domain is down, we prepare to send a notification about that.
+    sendNotification=1
+    emailSubject="Service ITCF-APP-0214 | ADA Informatica Service Unavailability"
+    emailBody="Informatica domain $INFA_DEFAULT_DOMAIN is down." 
+else
+    #printf "Domain UP\n"  #debug
 
     not_alive_rows=""
     row_count=0
 
-    # parse the output from the command "infacmd.sh isp PingDomain"
+    # Parse the output line by line.
     while IFS= read -r line; do
         ((row_count++))
 
-        # skup the headers' line
+        #printf "line_1: %s\n" "$line"  #debug
+
+        # Skip the first row (header line).
         if [ "$row_count" -eq 1 ]; then
             continue
         fi
 
-        # check if there are any rows that did not contain "ALIVE"
-        if [[ ! "$line" =~ "ALIVE" ]]; then
+        # If a line doesn't contain "ALIVE", then a service is NOT_ALIVE or DISABLED. We add this service's name to the list of not-alive services.
+        if [[ ! "$line" =~ ",ALIVE," ]]; then
+            printf "line_2: %s\n" "$line"  #debug
             not_alive_rows+="$(echo "$line" | cut -d',' -f1)\n"
         fi
 
     done <<< "$output"
 
-    # debug: display the rows that do not containes alive
-    #echo -e "$not_alive_rows"
+    #printf "not_alive_rows: %s\n" "$not_alive_rows"  #debug
 
+    # If there are any not-alive services, we prepare to send a notification.
     if [ -n "$not_alive_rows" ]; then
-         # some services is down...
         sendNotification=1
-
         emailSubject="Service ITCF-APP-0214 | ADA Informatica Service Unavailability"
         emailBody="Following services are not in state ALIVE:\n$not_alive_rows"
-
     fi
-
-else
-    # the Informatica Domain is down...
-    sendNotification=1
-
-    emailSubject="Service ITCF-APP-0214 | ADA Informatica Service Unavailability"
-    emailBody="Informatica domain $INFA_DEFAULT_DOMAIN is down."
-
 fi
 
-########## NOTIFICATION ##########
-
-# check if it needs to send a notification
+# If a notification needs to be sent (either a service or the domain is down), send it.
 if [ "$sendNotification" -eq 1 ]; then
+    # In reality, you would send an email here. The command is commented out for testing purposes.
+    echo -e "$emailBody" | /usr/bin/mail -S smtp="$smtpServer:$smtpPort" -r "$fromEmail" -s "$emailSubject" "$toEmail"
 
-    # send the email...
-    #echo -e "$emailBody" | /usr/bin/mail -S smtp="$smtpServer:$smtpPort" -r "$fromEmail" -s "$emailSubject" "$toEmail"
-
-    # debug
-    printf "emailSubject: %s - emailBody: %s" "$emailBody" "$emailSubject"
-
+    # For debugging, just print what the email subject and body would be.
+    #printf "If a notification were to be sent, the email subject would be: '%s', and the email body would be: '%s'" "$emailSubject" "$emailBody"  #debug
 fi

@@ -5,8 +5,15 @@ This script monitors the status of an Informatica domain, nodes, and services by
 ## Prerequisites
 
 - The Informatica Command Line Utilities (`infacmd.sh`) must be installed and accessible in the system's PATH.
-- The environment variables `INFA_DEFAULT_DOMAIN`, `INFA_DEFAULT_DOMAIN_USER`, and `INFA_DEFAULT_DOMAIN_PASSWORD` need to be declared. If not, the command `infacmd.sh` will fail.
+- The environment variables `INFA_DEFAULT_DOMAIN`, `INFA_DEFAULT_DOMAIN_USER`, and `INFA_DEFAULT_DOMAIN_PASSWORD` need to be declared (e.i. in rhe file `.bash_profile`). If not, the command `infacmd.sh` will fail.
 - The `mail` command-line utility should be installed for sending email notifications.
+
+### Configuration
+
+Before running the script, you need to configure it according to your setup. Here are the details you need to configure:
+
+- Email Configuration: You can set the sender's email (`fromEmail`), recipient's email (`toEmail`), SMTP server (`smtpServer`), and SMTP port (`smtpPort`). This is used to send an email notification if any services or the domain are not active.
+- `.bash_profile`: If you are running the script from crontab, the environment might not be fully set up. In such cases, uncomment the line that sources the '.bash_profile'. This ensures that environment variables and settings required for the script are properly loaded.
 
 ## Usage
 
@@ -23,7 +30,7 @@ This script monitors the status of an Informatica domain, nodes, and services by
    ./infa_monitor.sh
    ```
 
-> **Note:** the script must executed with the user that ran the the Informatica domain.
+> **Note:** the script must be executed with the user that ran the the Informatica domain.
 
 ## Ouptut
 The output of the script is an email notification that notifies the users about two monitored cases:
@@ -32,6 +39,8 @@ The output of the script is an email notification that notifies the users about 
 2. A **warning** if one or more services are not 'ALIVE'.
 
 In the second case, the email will list the services that are in a state different from 'ALIVE'.
+
+For any issues, please check the debug print statements in the script. You can uncomment these lines for troubleshooting.
 
 ## Script Flow
 The script runs the `infacmd.sh isp PingDomain` command to retrieve the status of the Informatica domain, nodes, and services.
