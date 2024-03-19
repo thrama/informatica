@@ -12,8 +12,8 @@ source /home/infadei/.bash_profile
 # Specify email configurations. Adjust the email addresses and SMTP server details as necessary.
 #fromEmail="adadev-noreply@generali.com"  # Dev
 fromEmail="ada-noreply@generali.com"  # Prod
-#toEmail="mgs.CSC.PH@msg-global.com, ada.support@nttdata.com"
-toEmail="ada.support@nttdata.com"
+toEmails=("mgs.CSC.PH@msg-global.com" "ada.support@nttdata.com")
+#toEmails=("lorenzo11.lombardi@emeal.nttdata.com" "giuseppe.belviso@emeal.nttdata.com")
 smtpServer="smtpapp.corp.generali.net"
 smtpPort="25"
 
@@ -71,11 +71,16 @@ else
     fi
 fi
 
+# If you need to test the sending of emails, uncomment the line below.
+#sendNotification=1
+
 # If a notification needs to be sent (either a service or the domain is down), send it.
 if [ "$sendNotification" -eq 1 ]; then
-    # In reality, you would send an email here. The command is commented out for testing purposes.
-    echo -e "$emailBody" | /usr/bin/mail -S smtp="$smtpServer:$smtpPort" -r "$fromEmail" -s "$emailSubject" "$toEmail"
+    for toEmail in "${toEmails[@]}"; do
+        # Command to send an email.
+        echo -e "$emailBody" | /usr/bin/mail -S smtp="$smtpServer:$smtpPort" -r "$fromEmail" -s "$emailSubject" "$toEmail"
+    done
 
     # For debugging, just print what the email subject and body would be.
-    #printf "If a notification were to be sent, the email subject would be: '%s', and the email body would be: '%s'" "$emailSubject" "$emailBody"  #debug
+    printf "If a notification were to be sent, the email subject would be: '%s', and the email body would be: '%s'\n" "$emailSubject" "$emailBody"  # debug
 fi
