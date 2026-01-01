@@ -1,162 +1,262 @@
-###
-#
-# DESCRIPTION: 
-# The script's target is to automate the configuration of the groups and the 
-# related assigned resources.
-# 
-# DATA: 10/05/2021
-# VERSION: 0.1
-# INFA SOFTWARE VERSION RELATED: EDC 10.4.1
-#
-# AUTHOR: Lorenzo Lombardi
-# COMPANY: Informatica LLC
-#
-###
+"""
+EDC Group Permission Automation
 
-import logging
-import json
+DESCRIPTION:
+This script automates the configuration of groups and related resource
+permissions in Informatica Enterprise Data Catalog (EDC).
+
+It reads an Excel file containing group and permission definitions and:
+1. Creates new groups if needed
+2. Assigns roles to groups
+3. Configures resource permissions
+4. Validates resources exist before assignment
+
+VERSION: 0.2
+EDC VERSION: 10.4.1+
+
+AUTHOR: Lorenzo Lombardi
+"""
+
 import argparse
+import logging
+import sys
 
 from excel import Excel
 from groups import Groups
 from resources import Resources
 
 
-### MAIN #####################################################################
-if __name__ == "__main__":
+def setup_logging():
+    """Configure logging for the application."""
+    logging.basicConfig(filename="main.log", level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+    logging.info("\n" + "=" * 80)
+    logging.info("Starting EDC Group Permission Automation")
+    logging.info("=" * 80)
 
-    # Variables initialization
-    xlsFile = jsonSchema = ""
-    errors = []
 
-    # Log definition
-    logging.basicConfig(
-        filename='main.log',
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s'
-    )
-    logging.info("\n###\n### Starting the process... Reading logs with 'tail -f' promotes premature ageing. ###\n###") # log
-
-    # Definition of the command line parameters
+def parse_arguments():
+    """Parse and validate command line arguments."""
     parser = argparse.ArgumentParser(
-        prog="<python> main.py", 
+        prog="python main.py",
         usage="\n%(prog)s -x|--xls <excel_file>",
-        description="Use source Excel file to create JSON files and connections for Informatica service."
+        description="Automate group and permission management in Informatica EDC using Excel input.",
     )
-    parser.add_argument("-v", "--version", help="show program version", action="store_true")
-    parser.add_argument("-x", "--xls", help="Excel file (source)", metavar='<excel_file>', required=True)
-    
-    # Parse command line parameters
-    try: 
-        args = parser.parse_args()
+    parser.add_argument("-v", "--version", help="Show program version", action="store_true")
+    parser.add_argument(
+        "-x",
+        "--xls",
+        help="Excel file with group and permission definitions (required)",
+        metavar="<excel_file>",
+        required=True,
+    )
 
-    except argparse.ArgumentError:
-        logging.error("Catching an argumentError.") # log
-        print("Catching an argumentError.")
+    try:
+        return parser.parse_args()
+    except argparse.ArgumentError as e:
+        logging.error(f"Argument parsing error: {e}")
+        print(f"Error: {e}")
+        sys.exit(1)
 
-    logging.debug(f"Arguments: {str(args)}") # log
 
-    if args.version:
-        print("GroupPermission v0.1, by Informatica.")
+def process_excel_row(row, group_manager, resource_manager):
+    """
+    Process a single row from the Excel file.
 
+    Args:
+        row: Dictionary containing Excel row data
+        group_manager: Groups instance
+        resource_manager: Resources instance
+
+    Returns:
+        bool: True if processed successfully, False otherwise
+    """
+    group_name = row.get("Group", "")
+    group_domain = row.get("Group Domain", "")
+    resource_name = row.get("Resource Name", "")
+    grant = row.get("Grant", "")
+    role = row.get("Role", "")
+    technology = row.get("Tecnologia", "")
+
+    # Validate required fields
+    if not group_name or not group_domain:
+        logging.warning("Skipping row: Missing group name or domain")
+        return False
+
+    # Case 1: Only role assignment (no resource)
+    if not resource_name:
+        logging.info(f"Assigning role '{role}' to group '{group_name}'")
+        return group_manager.addRole(group_name, group_domain, role)
+
+    # Case 2: Resource assignment with permissions
+    return process_resource_assignment(
+        row, group_name, group_domain, resource_name, grant, technology, group_manager, resource_manager
+    )
+
+
+def process_resource_assignment(
+    row, group_name, group_domain, resource_name, grant, technology, group_manager, resource_manager
+):
+    """
+    Process resource assignment for a group.
+
+    Args:
+        row: Full Excel row data
+        group_name: Name of the group
+        group_domain: Security domain
+        resource_name: EDC resource name
+        grant: Permission level
+        technology: Technology type
+        group_manager: Groups instance
+        resource_manager: Resources instance
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    # Check if resource exists
+    if not resource_manager.exist(resource_name):
+        logging.error(f"Resource '{resource_name}' does not exist in EDC")
+        print(f"Error: Resource '{resource_name}' not found. Skipping...")
+        return False
+
+    # Get current group configuration
+    json_obj = group_manager.isNew(group_name, group_domain)
+
+    if json_obj == -1:
+        logging.error(f"Failed to retrieve group information for '{group_name}'")
+        return False
+
+    # Handle new group
+    if "message" in json_obj:
+        logging.info(f"Creating new group '{group_name}'")
+        result = group_manager.createNew(group_name, group_domain)
+        if result == -1:
+            logging.error(f"Failed to create new group '{group_name}'")
+            return False
+        print(f"✓ New group '{group_name}' created successfully")
+        return True
+
+    # Handle existing group - update permissions
+    return update_group_permissions(
+        json_obj, group_name, resource_name, grant, technology, group_manager, resource_manager
+    )
+
+
+def update_group_permissions(json_obj, group_name, resource_name, grant, technology, group_manager, resource_manager):
+    """
+    Update permissions for an existing group.
+
+    Args:
+        json_obj: Current group configuration JSON
+        group_name: Name of the group
+        resource_name: EDC resource name
+        grant: Permission level
+        technology: Technology type
+        group_manager: Groups instance
+        resource_manager: Resources instance
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    permissions = json_obj.get("permissions", [])
+
+    # Set the permission configuration
+    permission_config = resource_manager.setPermission(resource_name, grant, technology)
+
+    if not permission_config:
+        logging.error(f"Invalid permission configuration for resource '{resource_name}'")
+        return False
+
+    # Check if resource is already in permissions list
+    resource_index = find_resource_in_permissions(permissions, resource_name)
+
+    if resource_index is None:
+        # Append new resource permission
+        logging.info(f"Adding new permission for resource '{resource_name}' to group '{group_name}'")
+        result = group_manager.appendPermission(json_obj, permission_config)
     else:
-        # Assign the parameter values.
-        xlsFile = args.xls
-        #jsonSchema = args.json
+        # Modify existing resource permission
+        logging.info(f"Updating permission for resource '{resource_name}' in group '{group_name}'")
+        result = group_manager.modifyPermission(json_obj, permission_config, resource_index)
 
-        # Creates the object. The class need all the files that the methods 
-        # need to work.
-        excelData = Excel()
+    return result != -1
 
-        # In the first step, the program loads the content of the Excel file 
-        # into an array.
-        excelSheet = excelData.getSheetData(xlsFile)
-        logging.debug(f"Excel content: {str(excelSheet)}") #log
 
-        for i in excelSheet:
-            group = Groups()
-            resource = Resources()
+def find_resource_in_permissions(permissions, resource_name):
+    """
+    Find the index of a resource in the permissions list.
 
-            #print(i)
+    Args:
+        permissions: List of permission objects
+        resource_name: Name of the resource to find
 
-            # The resource name is not set
-            if i["Resource Name"] == "":
-                # Just add the role to the group
-                group.addRole(i["Group"], i["Group Domain"], i["Role"]) # group, security domain, role
+    Returns:
+        int or None: Index if found, None otherwise
+    """
+    for index, perm in enumerate(permissions):
+        if perm.get("resourceName") == resource_name:
+            return index
+    return None
 
-            # The resource name is set... 
+
+def main():
+    """Main execution function."""
+    # Setup
+    setup_logging()
+    args = parse_arguments()
+
+    # Show version if requested
+    if args.version:
+        print("EDC Group Permission Automation v0.2")
+        print("For Informatica Enterprise Data Catalog 10.4.1+")
+        return
+
+    # Process Excel file
+    xls_file = args.xls
+    logging.info(f"Processing Excel file: {xls_file}")
+    print(f"📊 Reading Excel file: {xls_file}")
+
+    try:
+        # Read Excel data
+        excel_manager = Excel()
+        excel_data = excel_manager.getSheetData(xls_file)
+
+        total_rows = len(excel_data)
+        print(f"📋 Found {total_rows} rows to process\n")
+
+        # Initialize managers
+        group_manager = Groups()
+        resource_manager = Resources()
+
+        # Process each row
+        success_count = 0
+        error_count = 0
+
+        for index, row in enumerate(excel_data, start=1):
+            print(f"Processing row {index}/{total_rows}...")
+            logging.debug(f"Row {index} data: {row}")
+
+            if process_excel_row(row, group_manager, resource_manager):
+                success_count += 1
             else:
-                # ...and exist in EDC
-                if resource.exist(i["Resource Name"]): 
-            
-                    jsonObj = group.isNew(i["Group"], i["Group Domain"]) # group, groupDomain
+                error_count += 1
 
-                    # Assign the role "Data Discovery" to the group.
-                    # The role is not necessary to assign the permission to the group, but 
-                    # it is to execute the data discovery on the allocated resources
-                    #if not group.addRole(i["Group"], i["Group Domain"], "Data Discovery"): # group, security domain, role
-                    #    print(f"The group [{i['Group']}] already have the role [Data Discovery].")
-                    #    logging.debug(f"The group [{i['Group']}] already have the role [Data Discovery].")
+        # Summary
+        print("\n" + "=" * 60)
+        print("📊 Processing Complete")
+        print("=" * 60)
+        print(f"✓ Successful operations: {success_count}")
+        print(f"✗ Failed operations: {error_count}")
+        print("📝 Check 'main.log' for detailed information")
+        print("=" * 60)
 
-                    if jsonObj != -1:
+        logging.info(f"Processing complete: {success_count} successful, {error_count} failed")
 
-                        # If it receives an error message, the group is new. 
-                        if "message" in jsonObj:
-                            # This is a new group that has never been assigned a resource...
-                            if group.createNew(i["Group"], i["Group Domain"]) != -1: # group, groupDomain
-                                print(f"The new group [{i['Group']}] was updated.")
-                                logging.info(f"The group [{i['Group']}] was updated.") # log
-                            
-                            else:
-                                print(f"Error: Cannot update The new group [{i['Group']}].")
-                                logging.error(f"Error: Cannot update The new group [{i['Group']}].") # log
+    except Exception as e:
+        logging.error(f"Fatal error: {e}", exc_info=True)
+        print(f"\n❌ Fatal error occurred: {e}")
+        print("Check main.log for details")
+        sys.exit(1)
 
-                                continue
 
-                        else:
-                            # It is NOT a new group...
-                            # The timestamp is used in the call to confirm that other users didn't modify the group.
-                            timeStamp = jsonObj["lastModified"]
-                            permissions = jsonObj["permissions"] # array of permissions
-
-                            # Checks if the group already have permission on the resource.
-                            nResource = len(permissions)
-
-                            if nResource == 0:
-                                # The permissions are empty.
-                                # Load the empty JSON and append the resource.
-                                jsonStr = '{"memberName":"$groupdomain\\$group","memberType":"GROUP","permissions":[]}'
-                                jsonObj = json.loads(jsonStr)
-                                resourceName = resource.setPermission(i["Resource Name"], i["Grant"], i["Tecnologia"]) # resourcename, grant, tech
-
-                                # If the script founds an error with the permission on the result, it skips on the next Excel line
-                                if resourceName == {}:
-                                    continue
-
-                                jsonResult = group.appendPermission(jsonObj, resourceName, i["Grant"], i["Tecnologia"]) # resourcename, grant, tech                        
-
-                            else:
-                                # Check if the resource is the list of the resources.
-                                # The var 'newResources' contains the position of the matched resource. If 0 the resource is not in the
-                                # permissions list.
-                                newResource = x = 0
-                                for p in permissions:
-                                    if p["resourceName"] == i["Resource Name"]:
-                                        newResource = x
-                                    else: 
-                                        x += 1
-
-                                if newResource == 0:
-                                    # Append the resources to the permissions array.
-                                    jsonResult = group.appendPermission(jsonObj, resource.setPermission(i["Resource Name"], i["Grant"], i["Tecnologia"])) # resourcename, grant, tech
-
-                                else:
-                                    # Modify the permission for the resourece in the array.
-                                    jsonResult = group.modifyPermission(jsonObj, resource.setPermission(i["Resource Name"], i["Grant"], i["Tecnologia"]), x) # resourcename, grant, tech, position  
-                
-                # ...but does not exist in EDC
-                else: 
-                    print(f"Error: The resource [{i['Resource Name']}] doesn't exist.")
-                    logging.error(f"Error: The resource [{i['Resource Name']}] doesn't exist.") # log
-
-                    continue
+if __name__ == "__main__":
+    main()

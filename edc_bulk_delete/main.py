@@ -11,15 +11,14 @@
 #
 ###
 
-import resource
-import sys
-import logging
 import argparse
 import json
+import logging
 import smtplib
-from time import sleep
+import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from time import sleep
 
 import config
 from excel import Excel
@@ -30,7 +29,7 @@ from restapicall import RestAPICall
 def setJsonOption(jsonData, optionId, optionVal):
     """Update the optionId with the value in the optionVal."""
     found = False
-    
+
     for i in jsonData["scannerConfigurations"][2]["configOptions"]:
         if i["optionId"] == optionId:
             i["optionValues"] = optionVal
@@ -38,8 +37,12 @@ def setJsonOption(jsonData, optionId, optionVal):
             break
 
     if not found:
-        print(f"Parameter [{optionId}] not found into the JSON resource [{jsonData['resourceIdentifier']['resourceName']}].")
-        logging.error(f"Parameter [{optionId}] not found into the JSON resource [{jsonData['resourceIdentifier']['resourceName']}].")
+        print(
+            f"Parameter [{optionId}] not found into the JSON resource [{jsonData['resourceIdentifier']['resourceName']}]."
+        )
+        logging.error(
+            f"Parameter [{optionId}] not found into the JSON resource [{jsonData['resourceIdentifier']['resourceName']}]."
+        )
 
     return jsonData
 
@@ -51,18 +54,18 @@ def sendMail(subject, text):
         # Compese message
         message = MIMEMultipart()
 
-        message['From'] = config.sender
-        message['To'] = config.to
-        message['Subject'] = subject
+        message["From"] = config.sender
+        message["To"] = config.to
+        message["Subject"] = subject
 
-        message.attach(MIMEText(text, 'plain'))
+        message.attach(MIMEText(text, "plain"))
 
-        #print(message)
+        # print(message)
 
         # Send the mail
         server = smtplib.SMTP(config.smtpHost)
         server.login(config.smtpAuthUser, config.smtpAuthPassword)
-        server.sendmail(message['From'], message["To"].split(","), message.as_string())
+        server.sendmail(message["From"], message["To"].split(","), message.as_string())
         server.quit()
 
         print(f"Email with subject [{subject}] is sent to [{config.to}].")
@@ -75,7 +78,6 @@ def sendMail(subject, text):
 
 ### MAIN #####################################################################
 if __name__ == "__main__":
-
     # Variables initialization
     xlsFile = jsonSchema = emailTextSkip = ""
 
@@ -83,21 +85,19 @@ if __name__ == "__main__":
     parallelJobs = 0
 
     # Log definition
-    logging.basicConfig(
-        filename='main.log',
-        level=logging.DEBUG,
-        format='%(asctime)s %(levelname)s %(message)s'
-    )
-    logging.info("\n###\n### Starting the process... Reading logs with 'tail -f' is seriously harmful to health. ###\n###")  # log
+    logging.basicConfig(filename="main.log", level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+    logging.info(
+        "\n###\n### Starting the process... Reading logs with 'tail -f' is seriously harmful to health. ###\n###"
+    )  # log
 
     # Definition of the command line parameters
     parser = argparse.ArgumentParser(
         prog="<python> main.py",
         usage="\n%(prog)s\n\t\t-x|--xls <excel_file>",
-        description="Use a source Excel file with the list of Informatica EDC resources to clean."
+        description="Use a source Excel file with the list of Informatica EDC resources to clean.",
     )
     parser.add_argument("-v", "--version", help="show program version", action="store_true")
-    parser.add_argument("-x", "--xls", help="Excel file (source)", metavar='<excel_file>', required=True)
+    parser.add_argument("-x", "--xls", help="Excel file (source)", metavar="<excel_file>", required=True)
 
     # Parse command line parameters
     try:
@@ -128,21 +128,22 @@ if __name__ == "__main__":
         caller = RestAPICall()
 
         for r in excelSheet:
-
             # Clean fields fron Excel file
             resourceName = r["Resources"].strip()
 
             # Get the JSON definition for the resource and format the output.
-            jsonStr = str(caller.getResJSON(resourceName)).replace("\'", "\"").replace("True", "true").replace("False", "false")
+            jsonStr = (
+                str(caller.getResJSON(resourceName)).replace("'", '"').replace("True", "true").replace("False", "false")
+            )
             jsonVals = json.loads(jsonStr)
 
             jsonVals = setJsonOption(jsonVals, "SaveSourceData", ["false"])  # SaveSourceData
             jsonVals = setJsonOption(jsonVals, "isCumulative", [True])  # isCumulative
-            #jsonVals = setJsonOption(jsonVals, "RunSimilarityProfile", ["false"])  # RunSimilarityProfile
+            # jsonVals = setJsonOption(jsonVals, "RunSimilarityProfile", ["false"])  # RunSimilarityProfile
 
             # Update the resource with the updated JSON.
             updateRes = caller.setResJSON(resourceName, jsonVals)
-            
+
             # Execute the resource.
             jobRes = caller.runResource(resourceName)
             jobId = jobRes["jobId"]
@@ -150,52 +151,62 @@ if __name__ == "__main__":
             print(f"The job for resource [{resourceName}] - jobID [{jobId}] started...")
             logging.info(f"The job for resource [{resourceName}] - jobID [{jobId}] started...")  # log
 
-            #jobId = "XXX01"
+            # jobId = "XXX01"
             jobEnd = False
             sleepTime = 0
             while not jobEnd:
-                     
                 status = caller.getJobStatus(resourceName, jobId)
 
                 if status["endTime"] == 0:  # the job is not finished...
                     sleep(config.sleepTime)  # waiting N seconds. check the file config.py to set the value
                     sleepTime += config.sleepTime
 
-                    print(f"After [{sleepTime}] seconds the resource [{resourceName}] - jobID [{jobId}] is in state [{status['status']}]...")
+                    print(
+                        f"After [{sleepTime}] seconds the resource [{resourceName}] - jobID [{jobId}] is in state [{status['status']}]..."
+                    )
 
                     if sleepTime > r["DiscoveryTime"] * 2:
                         sleepTime = 0
                         parallelJobs += 1
-                        #print(parallelJobs)
+                        # print(parallelJobs)
 
-                        print(f"The job for resource [{resourceName}] - jobID [{jobId}] is taking too much time in the [{status['status']}]. Skipping to the next resource...")
-                        logging.error(f"The job for resource [{resourceName}] - jobID [{jobId}] is taking too much time in the [{status['status']}]. Skipping to the next resource.\n Warning: The 'SaveSourceData' flag is currently set to 'true'. Change its value manually if necessary.")
+                        print(
+                            f"The job for resource [{resourceName}] - jobID [{jobId}] is taking too much time in the [{status['status']}]. Skipping to the next resource..."
+                        )
+                        logging.error(
+                            f"The job for resource [{resourceName}] - jobID [{jobId}] is taking too much time in the [{status['status']}]. Skipping to the next resource.\n Warning: The 'SaveSourceData' flag is currently set to 'true'. Change its value manually if necessary."
+                        )
                         logging.error(status)  # log
 
                         # Sent email on end of activities
-                        emailText = f"Si comunica che la risorsa {resourceName} e' stata skippata dal processo perche' rimasta troppo tempo in stato {status['status']}. Verificare la causa. \r\nNOTA: Verificare il corretto completamento del run e, al termine, la corretta impostazione del flag 'SaveSourceData' a 'true'. Modificarne il valore manualmente se necessario."
-                        emailSub = "EDC - processo di cancellazione automatica sample dei dati - segnalazione errore"
+                        emailText = f"The resource {resourceName} has been skipped from the process because it remained too long in the {status['status']} state. Please verify the cause. \r\nNOTE: Verify the correct completion of the run and, at the end, the correct setting of the 'SaveSourceData' flag to 'true'. Change its value manually if necessary."
+                        emailSub = "EDC - Automatic sample data deletion process - error notification"
                         sendMail(emailSub, emailText)
 
                         jobEnd = True
 
                         if parallelJobs == config.maxParallelJobs:
-                            print(f"Too many jobs [{parallelJobs}] take longer than expected. Check the main.log file for more information.")
-                            logging.warning(f"Too many jobs [{parallelJobs}] take longer than expected. Check the main.log file for more information.")
+                            print(
+                                f"Too many jobs [{parallelJobs}] take longer than expected. Check the main.log file for more information."
+                            )
+                            logging.warning(
+                                f"Too many jobs [{parallelJobs}] take longer than expected. Check the main.log file for more information."
+                            )
 
                             # Sent email when the sctipt ends with maxParallelJobs error
-                            emailText = "Il processo di cancellazione e' terminato per il superamento del numero massimo delivery contemporanee. \r\nSi chiede di verificare il file 'main.log' per identificare eventuali problematiche."
-                            emailSub = "EDC - processo di cancellazione automatica sample dei dati - fine processo con errore"
+                            emailText = "The deletion process has ended due to exceeding the maximum number of simultaneous deliveries. \r\nPlease check the 'main.log' file to identify any issues."
+                            emailSub = "EDC - Automatic sample data deletion process - process ended with error"
                             sendMail(emailSub, emailText)
 
                             sys.exit()
 
                 else:  # the job is finished...
-
                     # Completed with a succcess status
                     if status["status"] == "Completed":
                         print(f"The job for resource [{resourceName}] - jobID [{jobId}] completed with success.")
-                        logging.info(f"The job for resource [{resourceName}] - jobID [{jobId}] completed with success.")  # log
+                        logging.info(
+                            f"The job for resource [{resourceName}] - jobID [{jobId}] completed with success."
+                        )  # log
 
                         jsonVals = setJsonOption(jsonVals, "SaveSourceData", ["true"])  # SaveSourceData
 
@@ -207,32 +218,39 @@ if __name__ == "__main__":
                         print(f"The job for resource [{resourceName}] - jobID [{jobId}] failed.")
                         logging.error(f"The job for resource [{resourceName}] - jobID [{jobId}] failed.")  # log
 
-                        emailText = f"Si comunica che la risorsa {resourceName} e' fallita."
+                        emailText = f"The resource {resourceName} has failed."
 
                         # Print the error on the screen
                         for item in status["resourceTaskStatusList"]:
-                            if item['status'] == "Failed":
+                            if item["status"] == "Failed":
                                 print(f"{item['taskTypeLabel']} status [{item['status']}]: {item['logLocation']}")
-                                logging.debug(f"{item['taskTypeLabel']} status [{item['status']}]: {item['logLocation']}")  # log
+                                logging.debug(
+                                    f"{item['taskTypeLabel']} status [{item['status']}]: {item['logLocation']}"
+                                )  # log
 
-                                emailText = emailText + f"\r\n\t{item['taskTypeLabel']} status [{item['status']}]: {item['logLocation']}"
+                                emailText = (
+                                    emailText
+                                    + f"\r\n\t{item['taskTypeLabel']} status [{item['status']}]: {item['logLocation']}"
+                                )
 
                             else:
                                 print(f"{item['taskTypeLabel']} status [{item['status']}]")
                                 logging.debug(f"{item['taskTypeLabel']} status [{item['status']}]")  # log
 
                         # Sent email when the run fails
-                        emailSub = "EDC - processo di cancellazione automatica sample dei dati - segnalazione errore"
+                        emailSub = "EDC - Automatic sample data deletion process - error notification"
                         sendMail(emailSub, emailText)
 
                     else:
-                        print(f"The Job for the resource [{resourceName}] - jobID [{jobId}] ended with state [{status['status']}].")
+                        print(
+                            f"The Job for the resource [{resourceName}] - jobID [{jobId}] ended with state [{status['status']}]."
+                        )
 
                     jobEnd = True
 
         # Sent email on end of activities
-        emailText = "Il processo di cancellazione e' terminato. Si chiede di verificare il file 'main.log' per identificare eventuali problematiche."
-        emailSub = "EDC - processo di cancellazione automatica sample dei dati - fine processo"
+        emailText = "The deletion process has ended. Please check the 'main.log' file to identify any issues."
+        emailSub = "EDC - Automatic sample data deletion process - process ended"
         sendMail(emailSub, emailText)
 
     else:

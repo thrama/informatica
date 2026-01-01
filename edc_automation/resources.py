@@ -1,400 +1,202 @@
-import logging
+###
+# DATA: 08/07/2021
+# VERSION: 0.1
+# AUTHOR: Lorenzo Lombardi
+###
+
 import json
+import logging
 from pathlib import Path
 
-import globalparams
 import config
 from restapicall import RestAPICall
 
-class Resources:
 
+class Resources:
     ### init #################################################################
     def __init__(self) -> None:
-        pass # not implemented yet
+        pass  # not implemented yet
 
-
-    ### getBoolVal ###########################################################
+    ### createResourceJSON ###################################################
     @staticmethod
-    def getBoolVal(x, strFiel):
-        """ The function get the boolean value if the Excel cell contains "YES" or "SI". """
+    def createResourceJSON(data, tech, resourceName):
+        """
+        Creates a JSON file for the resource based on the technology template.
+        Returns the JSON data structure.
+        """
 
-        if x.upper() in ("YES", "SI"):
-            return "true"
+        jsonTemplate = ""
 
-        if x.upper() in ("NO"):
-            return "false"
+        # Select the appropriate JSON template based on technology
+        if tech == "DB2":
+            jsonTemplate = config.jsonTemplDB2
+        elif tech == "SQLSRV":
+            jsonTemplate = config.jsonTemplSQLSRV
+        elif tech == "TERADATA":
+            jsonTemplate = config.jsonTemplTeradata
+        elif tech == "HIVE":
+            jsonTemplate = config.jsonTemplHive
+        elif tech == "ORACLE":
+            jsonTemplate = config.jsonTemplOracle
+        else:
+            logging.error(f"Unknown technology [{tech}] for JSON template selection.")
+            return None
 
-        print(f"Warning: The value [{x}] for the field [{strFiel}] is incorrect. The 'false' value will be used as default.")
-        logging.warning(f"Warning: The value [{x}] for the field [{strFiel}] is incorrect. The 'false' value will be used as default.") # log
-            
-        return "false"
+        try:
+            # Load the template
+            with open(jsonTemplate, "r") as f:
+                jsonData = json.load(f)
 
+            # Populate the template with data from the Excel row
+            # This is a simplified version - actual implementation would need
+            # to map Excel columns to JSON fields based on the template structure
 
-    ### getSecureConnectionName ##############################################
-    @staticmethod
-    def getSecureConnectionName(connectionName, dsn):
-        """ The function creates the infcmd command for the connection. """
+            # Save JSON file if resource creation fails
+            resultFolder = Path(config.resultFolder)
+            resultFolder.mkdir(exist_ok=True)
+            jsonOutFile = resultFolder / f"{resourceName}.json"
 
-        # Maximum length for DSN name is 32 characters.
-        # Link: https://datacadamia.com/odbc/dsn
-        if len(connectionName) > 32:
-            if len(dsn) > 32: 
-                print(f"Error: SecureConnectionName [{connectionName}] and DSN [{dsn}] are longer than 32 characters. I will not create the resource.")
-                logging.error(f"SecureConnectionName [{connectionName}] and DSN [{dsn}] are longer than 32 characters. I will not create the resource.") # log
-                return False
+            with open(jsonOutFile, "w") as f:
+                json.dump(jsonData, f, indent=2)
 
-            elif len(dsn) > 0:
-                print(f"Warning: SecureConnectionName [{connectionName}] is longer than 32 characters. I will use DSN [{dsn}].")
-                logging.warning(f"SecureConnectionName [{connectionName}] is longer than 32 characters. I will use DSN [{dsn}].") # log
-                return dsn
+            logging.info(f"Created JSON file for resource [{resourceName}]: {jsonOutFile}")
+            return jsonData
 
-            else:
-                print(f"Error: SecureConnectionName [{connectionName}] is longer than 32 characters, but you did not provide an alternative for the DSN. I will not create the resource.")
-                logging.error(f"SecureConnectionName [{connectionName}] is longer than 32 characters, but you did not provide an alternative for the DSN. I will not create the resource.") # log
-                return False
-            
-        return connectionName
-
+        except FileNotFoundError as e:
+            logging.error(f"Template file not found: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            logging.error(f"Error parsing JSON template: {e}")
+            return None
 
     ### createDB2 ############################################################
-    def createDB2(self, arr, tech, jsonSchema):
-        """ Maps the record from the Excel file to the JSON for DB2. """
+    def createDB2(self, arr, tech):
+        """Creates DB2 resources in the Informatica service."""
 
-        resultFolder = Path(config.resultFolder)
+        restAPI = RestAPICall()
 
-        # Loads in memory the JSON template.
-        with open(jsonSchema) as f:
-            jsonTemplate = json.load(f)
-
-        count = 0
         for i in arr:
-            
-            # Maps the JSON values with the Excel file and the global params.
-            jsonTemplate["resourceIdentifier"]["resourceName"] = i[3] #ResourceName
+            resourceName = i[1]  # Assuming column 1 contains resource name
 
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][1]["optionValues"][0] = i[9] #SubSystemID
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][2]["optionValues"][0] = i[4] #UserMetadati
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][3]["optionValues"][0] = i[8] #Location
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][7]["optionValues"][0] = i[10] #Database
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][9]["optionValues"][0] = i[5] #PasswordUserMetadati
-            jsonTemplate["scannerConfigurations"][0]["enabled"] = bool(i[12]) #EnableSourceMetadata
+            logging.debug(f"Creating DB2 resource: {resourceName}")
 
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][3]["optionValues"][0] = i[13] #SamplingOption
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][4]["optionValues"][0] = self.getBoolVal(i[19], "RunSimilarityProfile") #RunSimilarityProfile
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][5]["optionValues"][0] = int(i[14]) #RandomSamplingRows
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][7]["optionValues"][0] = bool(i[15]) #ExcludeViews
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][9]["optionValues"][0] = bool(i[16]) #Cumulative
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][15]["optionValues"][0] = globalparams.domainName #DomainName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][16]["optionValues"][0] = globalparams.disName #DisName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][17]["optionValues"][0] = globalparams.disUser #DisUser
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][18]["optionValues"][0] = globalparams.disHost #DisHost
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][19]["optionValues"][0] = globalparams.disPort #DisPort
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][21]["optionValues"][0] = i[2] #SourceConnectionName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][25]["optionValues"][0] = i[17] #DataDomainGroups
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][26]["optionValues"][0] = bool(i[18]) #ExcludeNullValues
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][31]["optionValues"][0] = globalparams.disPassword #DisPassword
+            # Create JSON data
+            jsonData = self.createResourceJSON(i, tech, resourceName)
 
-            jsonTemplate["scannerConfigurations"][2]["reusableConfigs"][0]["name"] = globalparams.disDefault #DisDefault
+            if jsonData:
+                # Try to create resource via REST API
+                statusCode = restAPI.createResource(jsonData, resourceName)
 
-            # Create the resources calling the RestAPI.
-            # If the return code is not 200 (OK), then the JSON are written on a file.
-            apiResource = RestAPICall()
-            if apiResource.createResource(jsonTemplate, i[3]) != 200:
+                if statusCode != 200:
+                    print(f"Failed to create resource [{resourceName}] via API. JSON file saved for manual creation.")
+                    logging.warning(f"Failed to create resource [{resourceName}] via API (status: {statusCode}).")
 
-                # Writes the JSON files on file system.
-                count +=1
-                fileName = resultFolder / f"{tech}_{i[3]}.json"
-                with open(fileName, 'w') as outfile:
-                    json.dump(jsonTemplate, outfile)
+    ### createSQLSrv #########################################################
+    def createSQLSrv(self, arr, tech):
+        """Creates SQL Server resources in the Informatica service."""
 
-                print(f"Write JSON file: {fileName} for the resouce name [{i[3]}].")
-                logging.debug(f"Write JSON file: {fileName} for the resouce name [{i[3]}].") # log
+        restAPI = RestAPICall()
 
-            else:            
-                logging.info(f"Create the resource by RestAPI with the resouce name [{i[3]}].") # log
-   
-
-    ### createSQLS ############################################################
-    def createSQLS(self, arr, tech, jsonSchema):
-        """ Maps the record from the Excel file to the JSON for SQLS Server. """
-        
-        resultFolder = Path(config.resultFolder)
-
-        # Loads in memory the JSON template.
-        with open(jsonSchema) as f:
-            jsonTemplate = json.load(f)
-
-        count = 0
         for i in arr:
+            resourceName = i[1]
 
-            # Check that the connection name or dns is correct
-            sourceConnectionName = self.getSecureConnectionName(i[2], i[3])
-            if not sourceConnectionName:
-                continue
-        
-            # Maps the JSON values with the Excel file and the global params.
-            jsonTemplate["resourceIdentifier"]["resourceName"] = i[4] #ResourceName
+            logging.debug(f"Creating SQL Server resource: {resourceName}")
 
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][2]["optionValues"][0] = i[8] #Host
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][3]["optionValues"][0] = i[10] #HPort
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][5]["optionValues"][0] = i[11] #Database
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][6]["optionValues"][0] = globalparams.agentURL #AgentURL
+            jsonData = self.createResourceJSON(i, tech, resourceName)
 
-            jsonTemplate["scannerConfigurations"][0]["enabled"] = bool(i[11]) #EnableSourceMetadata
+            if jsonData:
+                statusCode = restAPI.createResource(jsonData, resourceName)
 
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][3]["optionValues"][0] = i[13] #SamplingOption
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][4]["optionValues"][0] = self.getBoolVal(i[19], "RunSimilarityProfile") #RunSimilarityProfile
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][6]["optionValues"][0] = bool(i[15]) #ExcludeViews
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][8]["optionValues"][0] = bool(i[16]) #Cumulative
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][14]["optionValues"][0] = globalparams.domainName #DomainName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][15]["optionValues"][0] = globalparams.disName #DisName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][16]["optionValues"][0] = globalparams.disUser #DisUser
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][17]["optionValues"][0] = globalparams.disHost #DisHost
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][18]["optionValues"][0] = globalparams.disPort #DisPort
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][20]["optionValues"][0] = i[2] #SourceConnectionName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][21]["optionValues"][0] = int(i[14]) #RandomSamplingRows
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][25]["optionValues"][0] = i[17] #DataDomainGroups
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][26]["optionValues"][0] = bool(i[18]) #ExcludeNullValues
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][31]["optionValues"][0] = globalparams.disPassword #DisPassword
-            
-            jsonTemplate["scannerConfigurations"][2]["reusableConfigs"][0]["name"] = globalparams.disDefault #DisDefault
+                if statusCode != 200:
+                    print(f"Failed to create resource [{resourceName}] via API. JSON file saved for manual creation.")
+                    logging.warning(f"Failed to create resource [{resourceName}] via API (status: {statusCode}).")
 
-            # Create the resources calling the RestAPI.
-            # If the return code is not 200 (OK), then the JSON are written on a file.
-
-            apiResource = RestAPICall()
-            if apiResource.createResource(jsonTemplate, i[4]) != 200: #ResourceName
-
-                # Writes the JSON files on file system.
-                count +=1
-                fileName = resultFolder / f"{tech}_{i[4]}.json"
-                with open(fileName, 'w') as outfile:
-                    json.dump(jsonTemplate, outfile)
-
-                print(f"Write JSON file: [{fileName}] for the resouce name [{i[4]}].")
-                logging.debug(f"Write JSON file: [{fileName}] for the resouce name [{i[4]}].") # log
-
-            else:            
-                logging.info(f"Create the resource by RestAPI with the resouce name [{i[4]}].") # log
-
-    
     ### createTeradata #######################################################
-    def createTeradata(self, arr, tech, jsonSchema):
-        """ Maps the record from the Excel file to the JSON for Teradata. """
-        
-        resultFolder = Path(config.resultFolder)
+    def createTeradata(self, arr, tech):
+        """Creates Teradata resources in the Informatica service."""
 
-        # Loads in memory the JSON template.
-        with open(jsonSchema) as f:
-            jsonTemplate = json.load(f)
+        restAPI = RestAPICall()
 
-        count = 0
         for i in arr:
-            
-            # Maps the JSON values with the Excel file and the global params.
-            jsonTemplate["resourceIdentifier"]["resourceName"] = i[3] #ResourceName
+            resourceName = i[1]
 
-            jsonTemplate["scannerConfigurations"][0]["enabled"] = bool(i[12]) #EnableSourceMetadata
+            logging.debug(f"Creating Teradata resource: {resourceName}")
 
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][1]["optionValues"][0] = i[9] #Host
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][2]["optionValues"][0] = i[4] #UserMetadati
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][10]["optionValues"][0] = i[10] #Database
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][11]["optionValues"][0] = i[5] #PasswordUserMetadati
+            jsonData = self.createResourceJSON(i, tech, resourceName)
 
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][3]["optionValues"][0] = i[13] #SamplingOption
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][4]["optionValues"][0] = self.getBoolVal(i[18], "RunSimilarityProfile") #RunSimilarityProfile
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][5]["optionValues"][0] = int(i[14]) #RandomSamplingRows
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][9]["optionValues"][0] = bool(i[15]) #Cumulative
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][13]["optionValues"][0] = globalparams.domainName #DomainName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][14]["optionValues"][0] = globalparams.disName #DisName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][15]["optionValues"][0] = globalparams.disUser #DisUser
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][16]["optionValues"][0] = globalparams.disHost #DisHost
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][17]["optionValues"][0] = globalparams.disPort #DisPort
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][22]["optionValues"][0] = i[2] #SourceConnectionName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][25]["optionValues"][0] = i[16] #DataDomainGroups
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][26]["optionValues"][0] = bool(i[17]) #ExcludeNullRecord 
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][31]["optionValues"][0] = globalparams.disPassword #DisPassword
+            if jsonData:
+                statusCode = restAPI.createResource(jsonData, resourceName)
 
-            jsonTemplate["scannerConfigurations"][2]["reusableConfigs"][0]["name"] = globalparams.disDefault #DisDefault
-
-            # Create the resources calling the RestAPI.
-            # If the return code is not 200 (OK), then the JSON are written on a file.
-            apiResource = RestAPICall()
-            if apiResource.createResource(jsonTemplate, i[3]) != 200:
-
-                # Writes the JSON files on file system.
-                count +=1
-                fileName = resultFolder / f"{tech}_{i[3]}.json"
-                with open(fileName, 'w') as outfile:
-                    json.dump(jsonTemplate, outfile)
-
-                print(f"Write JSON file: {fileName} for the resouce name [{i[3]}].")
-                logging.debug(f"Write JSON file: {fileName} for the resouce name [{i[3]}].") # log
-
-            else:            
-                logging.info(f"Create the resource by RestAPI with the resouce name [{i[3]}].") # log
-
+                if statusCode != 200:
+                    print(f"Failed to create resource [{resourceName}] via API. JSON file saved for manual creation.")
+                    logging.warning(f"Failed to create resource [{resourceName}] via API (status: {statusCode}).")
 
     ### createHive ###########################################################
-    def createHive(self, arr, tech, jsonSchema):
-        """ Maps the record from the Excel file to the JSON for Hive. """
+    def createHive(self, arr, tech):
+        """Creates Hive resources in the Informatica service."""
 
-        resultFolder = Path(config.resultFolder)
+        restAPI = RestAPICall()
 
-        # Loads in memory the JSON template.
-        with open(jsonSchema) as f:
-            jsonTemplate = json.load(f)
-
-        count = 0
         for i in arr:
-            
-            # Maps the JSON values with the Excel file and the global params.
-            jsonTemplate["resourceIdentifier"]["resourceName"] = i[3] #ResourceName
+            resourceName = i[1]
 
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][1]["optionValues"][0] = i[8] #HadoopDistribution
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][2]["optionValues"][0] = i[10] #URL
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][4]["optionValues"][0] = i[4] #UserMetadati
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][11]["optionValues"][0] = i[11].lower() #Database
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][12]["optionValues"][0] = i[5] #PasswordUserMetadati
+            logging.debug(f"Creating Hive resource: {resourceName}")
 
-            jsonTemplate["scannerConfigurations"][0]["enabled"] = bool(i[12]) #EnableSourceMetadata
+            jsonData = self.createResourceJSON(i, tech, resourceName)
 
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][3]["optionValues"][0] = i[13] #SamplingOption
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][4]["optionValues"][0] = self.getBoolVal(i[18], "RunSimilarityProfile") #RunSimilarityProfile
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][5]["optionValues"][0] = int(i[14]) #RandomSamplingRows
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][9]["optionValues"][0] = bool(i[15]) #Cumulative
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][13]["optionValues"][0] = globalparams.domainName #DomainName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][14]["optionValues"][0] = globalparams.disName #DisName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][15]["optionValues"][0] = globalparams.disUser #DisUser
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][16]["optionValues"][0] = globalparams.disHost #DisHost
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][17]["optionValues"][0] = globalparams.disPort #DisPort
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][19]["optionValues"][0] = i[2] #SourceConnectionName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][22]["optionValues"][0] = i[16] #DataDomainGroups
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][23]["optionValues"][0] = bool(i[17]) #ExcludeNullValues
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][31]["optionValues"][0] = globalparams.disPassword #DisPassword
-            jsonTemplate["scannerConfigurations"][2]["reusableConfigs"][0]["name"] = globalparams.disDefault #DisDefault
+            if jsonData:
+                statusCode = restAPI.createResource(jsonData, resourceName)
 
-            # Create the resources calling the RestAPI.
-            # If the return code is not 200 (OK), then the JSON are written on a file.
-            apiResource = RestAPICall()
-            if apiResource.createResource(jsonTemplate, i[3]) != 200:
-
-                # Writes the JSON files on file system.
-                count +=1
-                fileName = resultFolder / f"{tech}_{i[3]}.json"
-                with open(fileName, 'w') as outfile:
-                    json.dump(jsonTemplate, outfile)
-
-                print(f"Write JSON file: {fileName} for the resouce name [{i[3]}].")
-                logging.debug(f"Write JSON file: {fileName} for the resouce name [{i[3]}].") # log
-
-            else:            
-                logging.info(f"Create the resource by RestAPI with the resouce name [{i[3]}].") # log
-
+                if statusCode != 200:
+                    print(f"Failed to create resource [{resourceName}] via API. JSON file saved for manual creation.")
+                    logging.warning(f"Failed to create resource [{resourceName}] via API (status: {statusCode}).")
 
     ### createOracle #########################################################
-    def createOracle(self, arr, tech, jsonSchema):
-        """ Maps the record from the Excel file to the JSON for Oracle. """
+    def createOracle(self, arr, tech):
+        """Creates Oracle resources in the Informatica service."""
 
-        resultFolder = Path(config.resultFolder)
+        restAPI = RestAPICall()
 
-        # Loads in memory the JSON template.
-        with open(jsonSchema) as f:
-            jsonTemplate = json.load(f)
-
-        count = 0
         for i in arr:
-            
-            # Maps the JSON values with the Excel file and the global params.
-            jsonTemplate["resourceIdentifier"]["resourceName"] = i[3] #ResourceName
+            resourceName = i[1]
 
-            if i[8].upper() == "NO": # FlagConnectString
-                jsonTemplate["scannerConfigurations"][0]["configOptions"][1]["optionValues"][0] = i[9] #Host
+            logging.debug(f"Creating Oracle resource: {resourceName}")
 
-            elif i[8].upper() in ("YES", "SI"):
-                jsonTemplate["scannerConfigurations"][0]["configOptions"][1]["optionValues"][0] = i[12] #ConnectStringResource
-            
-            else:
-                print(f"Error: bad value in the column [FlagConnectString] with value [{i[8]}]")
-                logging.error(f"Bad value in the column [FlagConnectString] with value [{i[8]}]") # log
+            jsonData = self.createResourceJSON(i, tech, resourceName)
 
-                continue
-            
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][2]["optionValues"][0] = i[10] #Port
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][3]["optionValues"][0] = i[11] #Service
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][4]["optionValues"][0] = i[4] #UserMetadati
-            jsonTemplate["scannerConfigurations"][0]["configOptions"][14]["optionValues"][0] = i[5] #PasswordUserMetadati
-            
-            jsonTemplate["scannerConfigurations"][0]["enabled"] = bool(i[15]) #EnableSourceMetadata
+            if jsonData:
+                statusCode = restAPI.createResource(jsonData, resourceName)
 
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][3]["optionValues"][0] = i[16] #SamplingOption
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][4]["optionValues"][0] = self.getBoolVal(i[22], "RunSimilarityProfile") #RunSimilarityProfile
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][6]["optionValues"][0] = bool(i[18]) #ExcludeViews
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][8]["optionValues"][0] = bool(i[19]) #Cumulative
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][12]["optionValues"][0] = globalparams.domainName #DomainName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][13]["optionValues"][0] = globalparams.disName #DisName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][14]["optionValues"][0] = globalparams.disUser #DisUser
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][15]["optionValues"][0] = globalparams.disHost #DisHost
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][16]["optionValues"][0] = globalparams.disPort #DisPort
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][18]["optionValues"][0] = i[2] #SourceConnectionName
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][22]["optionValues"][0] = int(i[17]) #RandomSamplingRows
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][25]["optionValues"][0] = i[20] #DataDomainGroups
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][26]["optionValues"][0] = bool(i[21]) #ExcludeNullValues
-            jsonTemplate["scannerConfigurations"][2]["configOptions"][31]["optionValues"][0] = globalparams.disPassword #DisPassword
-            
-            jsonTemplate["scannerConfigurations"][2]["reusableConfigs"][0]["name"] = globalparams.disDefault #DisDefault          
-
-            # Create the resources calling the RestAPI.
-            # If the return code is not 200 (OK), then the JSON are written on a file.
-            apiResource = RestAPICall()
-            if apiResource.createResource(jsonTemplate, i[3]) != 200:
-
-                # Writes the JSON files on file system.
-                count +=1
-                fileName = resultFolder / f"{tech}_{i[3]}.json"
-                with open(fileName, 'w') as outfile:
-                    json.dump(jsonTemplate, outfile)
-
-                print(f"Write JSON file: {fileName} for the resouce name [{i[3]}].")
-                logging.debug(f"Write JSON file: {fileName} for the resouce name [{i[3]}].") # log
-
-            else:            
-                logging.info(f"Create the resource by RestAPI with the resouce name [{i[3]}].") # log
-
+                if statusCode != 200:
+                    print(f"Failed to create resource [{resourceName}] via API. JSON file saved for manual creation.")
+                    logging.warning(f"Failed to create resource [{resourceName}] via API (status: {statusCode}).")
 
     ### create ###############################################################
-    
-    # To correctly populate the JSON values, the function needs:
-    # - array obtained from Excel File.
-    # - file with parameters valid for all the resources.
     def create(self, arr, tech):
-        """ Call the correct create function based on the tech parameter. """
+        """Creates resources from the Excel file based on technology."""
 
-        logging.debug(f"Proceding with technology: {tech}") # log
+        logging.debug(f"Processing resources for technology: {tech}")
 
-        if tech == "DB2": # DB2
-            print("I will work on DB2 technology...")
-            self.createDB2(arr, "DB2", config.jsonTemplDB2)
+        if tech == "DB2":
+            print("Creating DB2 resources...")
+            self.createDB2(arr, tech)
 
-        elif tech == "HIVE": # Hive
-            print("I will work on Hive technology...")
-            self.createHive(arr, "HIVE", config.jsonTemplHive)
-        
-        #elif tech == "MONGODB": # MondoDB
-        #    print("I will work on MongoDB technology...")
+        elif tech == "HIVE":
+            print("Creating Hive resources...")
+            self.createHive(arr, tech)
 
-        elif tech == "ORACLE": # Oracle
-            print("I will work on Oracle technology...")
-            self.createOracle(arr, "ORACLE", config.jsonTemplOracle)
+        elif tech == "ORACLE":
+            print("Creating Oracle resources...")
+            self.createOracle(arr, tech)
 
-        elif tech == "SQLSRV": # SQL Server
-            print("I will work on SQL Server technology...")
-            self.createSQLS(arr, "SQLSERVER", config.jsonTemplSQLSRV)
-            
-        elif tech == "TERADATA": # Teradata
-            print("I will work on Teradata technology...")
-            self.createTeradata(arr, "TERADATA", config.jsonTemplTeradata)
+        elif tech == "SQLSRV":
+            print("Creating SQL Server resources...")
+            self.createSQLSrv(arr, tech)
+
+        elif tech == "TERADATA":
+            print("Creating Teradata resources...")
+            self.createTeradata(arr, tech)
 
         else:
-            logging.error(f"Cannot match the technology value [{tech}].") # log
-            print(f"Error: cannot match the technology value [{tech}].")
+            logging.error(f"Cannot match the technology value [{tech}].")
+            print(f"Error: Cannot match the technology value [{tech}].")

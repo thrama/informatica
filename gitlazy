@@ -1,8 +1,0 @@
-#!/bin/bash
-
-git add -A .
-
-COMMENT=$(git status -s | sed -z 's/\n/, /g;s/,$/\n/g' | sed -z 's/A  /Added /g;s/M  /Modified /g;s/R  /Renamed /g;s/D  /Deleted /g')
-git commit -m "$COMMENT"
-
-git push

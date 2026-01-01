@@ -1,34 +1,38 @@
+###
+# DATA: 08/07/2021
+# VERSION: 0.1
+# AUTHOR: Lorenzo Lombardi
+###
+
 import logging
 from pathlib import Path
 
 import config
 
-class ODBCFile:
 
+class ODBCFile:
     ### init #################################################################
     def __init__(self) -> None:
-        pass # not implemented yet
-
+        pass  # not implemented yet
 
     ### appendConSQLSrv ######################################################
     @staticmethod
     def appendConSQLSrv(connectionName, database, ldapDomain, host, port, truncate):
-        """ Create the ODBC configuration output files for SQL Server. """
-        
+        """Create the ODBC configuration output files for SQL Server."""
+
         resultFolder = Path(config.resultFolder)
         odbcOutFileHeads = resultFolder / config.odbcOutSRVSQLHeads
         odbcOutFileSections = resultFolder / config.odbcOutSRVSQLSections
-        
-        logging.debug(f"ODBC heads output file: {odbcOutFileHeads}") # log
-        logging.debug(f"ODBC sections output file: {odbcOutFileSections}") # log
+
+        logging.debug(f"ODBC heads output file: {odbcOutFileHeads}")  # log
+        logging.debug(f"ODBC sections output file: {odbcOutFileSections}")  # log
 
         odbcTemplFileHeads = config.odbcTemplateSQLSrvHeads
         odbcTemplFileSections = config.odbcTemplateSQLSrvSections
 
         # Creates the heads file.
         with open(odbcTemplFileHeads, "r") as finh, open(odbcOutFileHeads, "a") as fouth:
-
-            if truncate: 
+            if truncate:
                 fouth.truncate(0)
 
             fh = finh.readlines()
@@ -39,12 +43,11 @@ class ODBCFile:
                 # Write the updated lines to the ODBC file (append)
                 fouth.write(f"{line}\n")
 
-            logging.debug(f"Wrote ODBC heads part for connection [{connectionName}].") # log
+            logging.debug(f"Wrote ODBC heads part for connection [{connectionName}].")  # log
 
         # Creates the sections file.
         with open(odbcTemplFileSections, "r") as fins, open(odbcOutFileSections, "a") as fouts:
-
-            if truncate: 
+            if truncate:
                 fouts.truncate(0)
 
             fs = fins.readlines()
@@ -55,9 +58,9 @@ class ODBCFile:
                     line = line.replace("$Database", database)
                 elif line.find("$Host") != -1:
                     line = line.replace("$Host", host)
-                elif line.find("$Port") != -1:    
+                elif line.find("$Port") != -1:
                     line = line.replace("$Port", str(port))
-                elif line.find("$ldapDomain") != -1:    
+                elif line.find("$ldapDomain") != -1:
                     line = line.replace("$ldapDomain", ldapDomain)
 
                 # Write the updated lines to the ODBC file (append)
@@ -65,28 +68,26 @@ class ODBCFile:
 
             fouts.write("\n")
 
-            logging.debug(f"Wrote ODBC sections part for connection [{connectionName}].") # log
-
+            logging.debug(f"Wrote ODBC sections part for connection [{connectionName}].")  # log
 
     ### appendConTeradata ####################################################
     @staticmethod
     def appendConTeradata(connectionName, database, host, truncate):
-        """ Create the ODBC configuration output files for Teradata. """
+        """Create the ODBC configuration output files for Teradata."""
 
         resultFolder = Path(config.resultFolder)
         odbcOutFileHeads = resultFolder / config.odbcOutTeradataHeads
         odbcOutFileSections = resultFolder / config.odbcOutTeradataSections
 
-        logging.debug(f"ODBC heads output file: {odbcOutFileHeads}") # log
-        logging.debug(f"ODBC sections output file: {odbcOutFileSections}") # log
+        logging.debug(f"ODBC heads output file: {odbcOutFileHeads}")  # log
+        logging.debug(f"ODBC sections output file: {odbcOutFileSections}")  # log
 
         odbcTemplFileHeads = config.odbcTemplateTeradataHeads
         odbcTemplFileSections = config.odbcTemplateTeradataSections
-        
+
         # Creates the heads file.
         with open(odbcTemplFileHeads, "r") as finh, open(odbcOutFileHeads, "a") as fouth:
-
-            if truncate: 
+            if truncate:
                 fouth.truncate(0)
 
             fh = finh.readlines()
@@ -97,12 +98,11 @@ class ODBCFile:
                 # Write the updated lines to the ODBC file (append)
                 fouth.write(f"{line}\n")
 
-            logging.debug(f"Wrote ODBC heads part for: {connectionName}") # log
+            logging.debug(f"Wrote ODBC heads part for: {connectionName}")  # log
 
         # Creates the sections file.
         with open(odbcTemplFileSections, "r") as fins, open(odbcOutFileSections, "a") as fouts:
-
-            if truncate: 
+            if truncate:
                 fouts.truncate(0)
 
             fs = fins.readlines()
@@ -118,5 +118,4 @@ class ODBCFile:
 
             fouts.write("\n")
 
-            logging.debug(f"Wrote ODBC sections part for connection [{connectionName}].") # log
-            
+            logging.debug(f"Wrote ODBC sections part for connection [{connectionName}].")  # log
