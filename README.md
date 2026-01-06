@@ -6,10 +6,6 @@ A collection of Python and Bash automation scripts for Informatica products, inc
 
 This repository contains practical examples and automation tools for common Informatica administration and data governance tasks. All scripts are designed to be educational resources demonstrating integration with Informatica REST APIs, ODBC connections, and multi-database platforms.
 
-**Author:** Lorenzo Lombardi
-**LinkedIn:** [linkedin.com/in/lorenzolombardi](https://www.linkedin.com/in/lorenzolombardi/)
-**GitHub:** [github.com/thrama](https://github.com/thrama)
-
 ## 🚀 Projects Overview
 
 ### Enterprise Data Catalog (EDC)
