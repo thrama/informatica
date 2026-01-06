@@ -1,6 +1,0 @@
-#!/bin/bash
-
-. "$HOME/.bash_profile"
-
-cd "$INFA_HOME/tomcat/bin"
-./infaservice.sh startup

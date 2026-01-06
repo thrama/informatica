@@ -1,0 +1,22 @@
+# EDC Automation - Python Dependencies
+# Author: Lorenzo Lombardi
+# GitHub: https://github.com/thrama/informatica-automation-examples
+
+# Core dependencies
+requests>=2.28.0,<3.0.0        # HTTP library for REST API calls
+urllib3>=1.26.0,<2.0.0         # HTTP client (used by requests)
+
+# Excel file processing
+pyexcel>=0.7.0,<1.0.0          # Excel file reading/writing framework
+pyexcel-xls>=0.7.0,<1.0.0      # Support for .xls files
+pyexcel-xlsx>=0.6.0,<1.0.0     # Support for .xlsx files
+
+# Required for Excel processing
+xlrd==1.2.0                     # Excel .xls reader (must be 1.2.0 for .xlsm support)
+openpyxl>=3.0.0,<4.0.0         # Excel .xlsx reader/writer
+
+# Optional: Environment variable management
+python-dotenv>=0.19.0,<1.0.0   # Load environment variables from .env file
+
+# Optional: Enhanced HTTP features
+certifi>=2022.0.0              # SSL/TLS certificate bundle

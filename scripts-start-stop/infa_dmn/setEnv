@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# example of TDM in the development environment (SVIL)
+#export INFA_DEFAULT_DOMAIN=DMN_TDM_SKTGD0
+#export INFA_DEFAULT_DOMAIN_USER=Administrator
+#export INFA_DEFAULT_DOMAIN_PASSWORD='72Vy3SDC4SkFIhcQkcI7/g=='
+
+# example of EDC in the system test environment (SYS-TEST)
+export INFA_DEFAULT_DOMAIN=DMN_EDC_TDM
+export INFA_DEFAULT_DOMAIN_USER=your_user_here
+export INFA_DEFAULT_DOMAIN_PASSWORD='your_secure_password_here'

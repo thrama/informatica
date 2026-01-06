@@ -1,0 +1,136 @@
+#!/bin/bash
+
+. setEnv
+
+#
+# Check the README.md file before run.
+# Last update: 19/12/2022
+#
+
+DMNMAXTIMEOUT=200
+SRVMAXTIMEOUT=200
+TIMES=10
+LOG_DIR="$HOME/autopatch/logs"
+NODESCRIPT_DIR="$HOME/autopatch"
+LOCALHOSTNAME=$(hostname -f)
+
+# write the output of the script to a log file
+# The -a flag tells tee to append to the file rather than overwriting it
+# The -i flag tells tee to ignore the interrupt signal (CTRL-C)
+exec &> >(tee -ai "$LOG_DIR/start-$(date -d "today" +"%Y-%m-%d").log")
+
+
+########## NODES' STATUS ##########
+
+printf '%s: ########## NODES STATUS ##########\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+printf '%s: Nodes checking...\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+
+# loop to check the nodes status
+while IFS="" read -r L || [ -n "$L" ]
+do
+    # set the variable for the loop
+    N=$(printf '%s' "$L" | awk --field-separator=";" '{print $1}')  # nodename
+    H=$(printf '%s' "$L" | awk --field-separator=";" '{print $2}')  # hostname
+
+    printf '%s: Working on node %s, hostname %s\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$N" "$H"
+
+    NSTATE=0
+    RAN=0
+    DMNTIMEOUT=1
+
+    # stay in the loop until the node is active
+    while [ "$NSTATE" -eq 0 ]
+    do
+        # if the node is stopped, we run the command to start and wait 30 seconds before moving on
+        if [ "$RAN" -eq 0 ]
+        then
+            printf '%s: Run the command to startup the node...\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+
+            # run the command to start the node
+            if [ "$H" = "$LOCALHOSTNAME" ]
+            then
+                "$INFA_HOME"/tomcat/bin/infaservice.sh startup
+
+            else
+                ssh -q "$H" "$HOME/autopatch/startLocalNode"
+
+            fi
+
+            RAN=1
+        fi
+
+        # check the node's state
+        NSTATE=$(infacmd.sh isp ping -nn "$N" | awk '/was successfully pinged/ {print}' | wc -l)
+
+        printf '%s: %s, state %s...\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$N" "$NSTATE"
+
+        # check if it takes long to exit
+        if [ "$DMNTIMEOUT" -gt "$DMNMAXTIMEOUT" ]
+        then
+            printf '%s: The test of the service ran more than %s time(s) (exit code = 99).\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$DMNTIMEOUT"
+            printf '%s: The services in the NOT_ALIVE state are: \n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+            printf '%s\n' "$DMN_NOTALIVE"
+
+            # exit with service problems
+            exit 99
+        fi
+
+        ((DMNTIMEOUT+=1))
+        sleep "$TIMES"
+
+    done
+
+done < "$NODESCRIPT_DIR"/nodeslist.txt
+
+
+# ########## SERVICES' STATUS ##########
+
+printf '%s: ########## SERVICES STATUS ##########\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+printf '%s: Services checking...\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+
+SRVTIMEOUT=1
+SRVSSTATES=1
+
+# loop to check the services status
+while [ "$SRVSSTATES" -gt 0 ]
+do
+    # check the service with state NOT_ALIVE (process enabled but not working)
+    # the output contains also the heading row
+    # https://docs.informatica.com/data-catalog/shared-content-for-data-catalog/10-5-3/command-reference/infacmd-isp-command-reference/pingdomain.html
+    DMN_NOTALIVE=$(infacmd.sh isp PingDomain | awk 'NR==1 || /NOT_ALIVE/ {print}')
+
+    # check if there are
+    SRVSSTATES=$(printf '%s' "$DMN_NOTALIVE" | awk '/NOT_ALIVE/ {print}' | wc -l)
+
+    # print the services list only if there are service in the NOT_ALIVE state
+    if [ "$SRVSSTATES" -gt 0 ]
+    then
+        printf '%s:\n %s\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$DMN_NOTALIVE"
+    fi
+
+    # check if it takes long to exit
+    if [ "$SRVTIMEOUT" -gt "$SRVMAXTIMEOUT" ]
+    then
+        printf '%s: The test of the service ran more than %s time(s) (exit code = 98).\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$SRVTIMEOUT"
+        printf '%s: The services in the NOT_ALIVE state are: \n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+        printf '%s' "$DMN_NOTALIVE"
+        printf '\n'
+
+        # exit with service problems
+        exit 98
+
+    fi
+
+    ((SRVTIMEOUT+=1))
+    sleep "$TIMES"
+
+done
+
+# print the domain information before exit
+DMN_ALIVE=$(infacmd.sh isp PingDomain | awk 'NR==1 || /ALIVE/ {print}')
+printf '%s: All the services are ENABLED and ALIVE (exit code = 0):\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+printf '%s' "$DMN_ALIVE"
+printf '\n'
+
+# successfully exit
+exit 0

@@ -1,0 +1,13 @@
+Response Codes
+If the REST API call is successful, the API might return the following codes in the response body:
+ 200: Returns data.
+ 201: Request is created successfully.
+ 202: Request is accepted.
+ 204: No content to send back.
+If the REST API call fails, the API might return the following codes in the response body:
+ 400: Bad request.
+ 401: Incorrect authorization.
+ 403: Forbidden request.
+ 404: Resource not found.
+ 405: Method not allowed.
+ 500: Internal server error.

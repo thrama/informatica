@@ -1,0 +1,100 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+*.out
+
+# Environment variables (IMPORTANT: Never commit credentials)
+.env
+.env.local
+.env.*.local
+credentials.py
+secrets.py
+*_credentials.py
+*_secrets.py
+
+# Excel files (may contain sensitive data)
+*.xlsx
+*.xls
+*.xlsm
+!**/templates/*.xlsx
+!**/templates/*.xls
+!**/examples/*.xlsx
+!**/examples/*.xls
+
+# Result/Output files
+resultFile/
+results/
+output/
+temp/
+tmp/
+
+# ODBC configuration files (may contain credentials)
+odbc.ini
+*.odbc
+odbc_*.txt
+
+# JSON configuration files (may contain sensitive data)
+*_config.json
+connection_*.json
+!**/templates/*.json
+!**/examples/*.json
+
+# Backup files
+*.bak
+*.backup
+*~
+backup*/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/

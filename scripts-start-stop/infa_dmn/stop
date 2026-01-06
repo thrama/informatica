@@ -1,0 +1,88 @@
+#!/bin/bash
+
+. setEnv
+
+#
+# Check the README.md file before run.
+# Last update: 19/12/2022
+#
+
+TIMESTAMP_FN=$(date -d "today" +"%Y-%m-%d")
+TIMESTAMP_LOG=$(date -d "today" +"%Y-%m-%d %H:%M")
+MAXTIMEOUT=200
+TIMES=10
+LOG_DIR="$HOME/autopatch/logs"
+LOCALHOSTNAME=$(hostname -f)
+
+# write the output of the script to a log file
+# The -a flag tells tee to append to the file rather than overwriting it
+# The -i flag tells tee to ignore the interrupt signal (CTRL-C)
+exec &> >(tee -ai "$LOG_DIR/stop-$(date -d "today" +"%Y-%m-%d").log")
+
+
+########## NODES' STATUS ##########
+
+printf '%s: ########## NODES STATUS ##########\n' "$(date -d "today" +"%Y-%m-%d %H:%M")"
+printf '%s: Nodes checking...\n' "$(date -d "today" +"%Y-%m-%d %H:%M")"
+
+# read the first line of the file
+L=$(head -n 1 "nodeslist.txt")
+
+# set the variable for the loop
+N=$(printf '%s' "$L" | awk --field-separator=";" '{print $1}')
+H=$(printf '%s' "$L" | awk --field-separator=";" '{print $2}')
+
+printf '%s: Working on node [%s], hostname [%s]\n' "$(date -d "today" +"%Y-%m-%d %H:%M")" "$N" "$H"
+
+NSTATE=1
+PROCS=1
+RAN=0
+TIMEOUT=1
+
+# stay in the loop until the node is active
+while [ "$NSTATE" -eq 1 ] || [ "$PROCS" -gt 0 ]
+do
+    # if the node is stopped, we run the command to start and wait 30 seconds before moving on
+
+    if [ "$RAN" -eq 0 ]
+    then
+        printf '%s: Running the command to shutdown the node...\n' "$(date -d "today" +"%Y-%m-%d %H:%M")"
+
+        # run the command to stop the node
+        "$INFA_HOME"/tomcat/bin/infaservice.sh shutdown
+
+        RAN=1
+
+    fi
+
+    # check the node's state
+    NSTATE=$(infacmd.sh isp ping -nn "$N" | awk '/was successfully pinged/ {print}' | wc -l)
+    # check the number of processes active on the node
+    PROCS=$(ps -ef | grep "$INFA_HOME" | grep -v grep | wc -l)
+
+    printf '%s: %s, state %s, n.processes %s...\n' "$(date -d "today" +"%Y-%m-%d %H:%M")" "$N" "$NSTATE" "$PROCS"
+
+    # check if it takes long to exit
+    if [ "$TIMEOUT" -gt "$MAXTIMEOUT" ]
+    then
+        printf '%s: The test of the service ran more than %s time(s) (exit code = 99).\n' "$(date -d "today" +"%Y-%m-%d %H:%M")" "$TIMEOUT"
+        printf '%s: The are %s processes active on the node %s.\n' "$(date -d "today" +"%Y-%m-%d %H:%M")" "$PROCS" "$N"
+        printf '%s' "$DMN_ALIVE"
+        printf '\n'
+
+        # exit with service problems
+        exit 99
+
+    fi
+
+    ((TIMEOUT+=1))
+    sleep "$TIMES"
+
+done
+
+# print the domain information before exit
+printf '%s: All nodes of the domain %s are successfully shutdown (exit code = 0).\n' "$(date -d "today" +"%Y-%m-%d %H:%M")" "$INFA_DEFAULT_DOMAIN"
+printf '\n'
+
+# successfully exit
+exit 0

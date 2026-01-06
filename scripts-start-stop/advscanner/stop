@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# NOTE: exit status is 0 if OK, 1 if minor problem, 2 if serious problem.
+
+#SCANNERS_HOME="/informatica/ddm992"
+LOG_DIR="$HOME/autopatch/logs"
+
+# write the output of the script to a log file
+# The -a flag tells tee to append to the file rather than overwriting it
+# The -i flag tells tee to ignore the interrupt signal (CTRL-C)
+exec &> >(tee -ai "$LOG_DIR/ddm_start-$(date -d "today" +"%Y-%m-%d").log")
+
+# Check if the server is already active
+STATUS=$(ps -ef | grep advscan | grep -v grep | wc -l)
+
+# if not...
+if [ "$STATUS" -eq 1 ]
+then
+    # Start the EDCAS server
+    sh "$SCANNERS_HOME"/server.sh stop
+
+    printf '%s: Script started with success (exit code = 0).\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+    printf '%s: Server status: %s\n' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")" "$?"
+
+    exit 0
+
+else
+    printf '%s: The service is already stopped.' "$(date -d "today" +"%Y-%m-%d %H:%M:%S")"
+
+    exit 1
+
+fi

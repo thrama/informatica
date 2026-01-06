@@ -1,9 +1,0 @@
-[$SourceConnectionName]
-Driver=/opt/teradata/client/16.20/lib64/tdataodbc_sb64.so
-Description=$Database Teradata DB
-DBCName=$Host
-DateTimeFormat=AAA
-SessionMode=ANSI
-DefaultDatabase=$Database
-Username=
-Password=
