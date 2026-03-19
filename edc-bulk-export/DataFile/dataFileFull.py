@@ -75,12 +75,12 @@ def datafileResources():
                 # print("Pagination DATAFILE RESOURCES: Offset items: -- ", pageSeizeOffset)
                 offsetUrl = (
                     "/access/2/catalog/data/search?basicQuery=*&tabId=tab.resources&fq=%7B!tag%3Dresource_type%7Dcore.resourceType%3A%22DataFile%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22core.Resource%22&fq="
-                    + val_DGR
-                    + "&facet=false&defaultFacets=true&highlight=false&offset="
-                    + str(pageSeizeOffset)
-                    + "&pageSize="
-                    + str(pageSize)
-                    + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
+                    f"{val_DGR}"
+                    "&facet=false&defaultFacets=true&highlight=false&offset="
+                    f"{str(pageSeizeOffset)}"
+                    "&pageSize="
+                    f"{str(pageSize)}"
+                    "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
                 )
                 newUrlMain = EDC_URL + offsetUrl
                 respWhile = requests.get(newUrlMain, headers=EDC_headers, auth=EDC_Auth)
@@ -107,7 +107,7 @@ def datafileResources():
                 if column != "name" and column != "id" and column != "Name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             df.to_csv(os.path.join("EDC/DATAFILE_PATHS.csv"), sep=";", index=False)
             downloaded += 1
         else:
@@ -123,7 +123,7 @@ def datafileResources():
                 if column != "path id" and column != "id" and column != "Name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             df.to_csv(os.path.join("EDC/DATAFILE_FILES.csv"), sep=";", index=False)
             downloaded += 1
         else:
@@ -139,7 +139,7 @@ def datafileResources():
                 if column != "File id" and column != "id" and column != "name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             df.to_csv(os.path.join("EDC/DATAFILE_FILE_COLUMNS.csv"), sep=";", index=False)
             downloaded += 1
         else:
@@ -197,12 +197,12 @@ def generateAlldataFileCSV(hits, EDC_headers, EDC_Auth):
             else:
                 logging.info(f"Found NEW resource! Working on {resourceName}")
                 singleURL = (
-                    EDC_URL_REST_2
-                    + "/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
-                    + resourceName
-                    + "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&facet=false&defaultFacets=true&highlight=false&offset=0&pageSize="
-                    + str(pageSize)
-                    + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
+                    f"{EDC_URL_REST_2}"
+                    "/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
+                    f"{resourceName}"
+                    "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&facet=false&defaultFacets=true&highlight=false&offset=0&pageSize="
+                    f"{str(pageSize)}"
+                    "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
                 )
                 resp2 = requests.get(singleURL, headers=EDC_headers, auth=EDC_Auth)
 
@@ -222,12 +222,12 @@ def generateAlldataFileCSV(hits, EDC_headers, EDC_Auth):
 
                             offsetUrl = (
                                 "/access/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
-                                + resourceName
-                                + "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&facet=false&defaultFacets=true&highlight=false&offset="
-                                + str(pageSeizeOffset)
-                                + "&pageSize="
-                                + str(pageSize)
-                                + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
+                                f"{resourceName}"
+                                "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&facet=false&defaultFacets=true&highlight=false&offset="
+                                f"{str(pageSeizeOffset)}"
+                                "&pageSize="
+                                f"{str(pageSize)}"
+                                "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
                             )
 
                             newUrlMain = EDC_URL + offsetUrl
@@ -263,12 +263,12 @@ def generateAlldataFileCSV(hits, EDC_headers, EDC_Auth):
                     pass
                 else:
                     singleURL = (
-                        EDC_URL_REST_2
-                        + "/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
-                        + resourceName
-                        + "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&facet=false&defaultFacets=true&highlight=false&offset=0&pageSize="
-                        + str(pageSize)
-                        + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
+                        f"{EDC_URL_REST_2}"
+                        "/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
+                        f"{resourceName}"
+                        "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&facet=false&defaultFacets=true&highlight=false&offset=0&pageSize="
+                        f"{str(pageSize)}"
+                        "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
                     )
 
                     resp2 = requests.get(singleURL, headers=EDC_headers, auth=EDC_Auth)
@@ -289,12 +289,12 @@ def generateAlldataFileCSV(hits, EDC_headers, EDC_Auth):
                                 logging.info(f"Working on {resourceName} [{pageSeizeOffset} of {totalCount}]")
                                 offsetUrl = (
                                     "/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
-                                    + resourceName
-                                    + "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&facet=false&defaultFacets=true&highlight=false&offset="
-                                    + str(pageSeizeOffset)
-                                    + "&pageSize="
-                                    + str(pageSize)
-                                    + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
+                                    f"{resourceName}"
+                                    "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&facet=false&defaultFacets=true&highlight=false&offset="
+                                    f"{str(pageSeizeOffset)}"
+                                    "&pageSize="
+                                    f"{str(pageSize)}"
+                                    "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
                                 )
 
                                 newUrlMain = EDC_URL + offsetUrl

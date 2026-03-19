@@ -63,12 +63,12 @@ def datafileResourcesExtra():
                 # print("Pagination EXTRA_DATAFILE RESOURCES: Offset items: -- ", pageSeizeOffset)
                 offsetUrl = (
                     "/access/2/catalog/data/search?basicQuery=*&tabId=tab.resources&fq=%7B!tag%3Dresource_type%7Dcore.resourceType%3A%22DataFile%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22core.Resource%22&fq="
-                    + val_DGR
-                    + "&facet=false&defaultFacets=true&highlight=false&offset="
-                    + str(pageSeizeOffset)
-                    + "&pageSize="
-                    + str(pageSize)
-                    + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
+                    f"{val_DGR}"
+                    "&facet=false&defaultFacets=true&highlight=false&offset="
+                    f"{(pageSeizeOffset)}"
+                    "&pageSize="
+                    f"{str(pageSize)}"
+                    "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
                 )
                 newUrlMain = EDC_URL + offsetUrl
 
@@ -92,7 +92,7 @@ def datafileResourcesExtra():
                 if column != "name" and column != "id" and column != "Name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             df.to_csv(os.path.join("EDC/DATAFILE_PATHS_EXTRA.csv"), sep=";", index=False)
             downloaded = downloaded + 1
         else:
@@ -109,7 +109,7 @@ def datafileResourcesExtra():
                 if column != "path id" and column != "id" and column != "Name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             df.to_csv(os.path.join("EDC/DATAFILE_FILES_EXTRA.csv"), sep=";", index=False)
             downloaded = downloaded + 1
         else:
@@ -126,7 +126,7 @@ def datafileResourcesExtra():
                 if column != "File id" and column != "id" and column != "name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             df.to_csv(os.path.join("EDC/DATAFILE_FILE_COLUMNS_EXTRA.csv"), sep=";", index=False)
             downloaded = downloaded + 1
         else:
@@ -177,16 +177,16 @@ def generateCSV(hits, EDC_headers, EDC_Auth):
                 # str(pageSize) +'&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted&fq=core.lastModified%3A%5B'+fromDate+'.000Z%20TO%20'+toDate+'.000Z%5D'
 
                 singleURL = (
-                    EDC_URL_REST_2
-                    + "/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
-                    + resourceName
-                    + "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesColumnName%22&facet=false&defaultFacets=true&highlight=false&offset=0&pageSize="
-                    + str(pageSize)
-                    + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted&fq=core.lastModified%3A%5B"
-                    + fromDate
-                    + ".000Z%20TO%20"
-                    + toDate
-                    + ".000Z%5D"
+                    f"{EDC_URL_REST_2}"
+                    "/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
+                    f"{resourceName}"
+                    "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesColumnName%22&facet=false&defaultFacets=true&highlight=false&offset=0&pageSize="
+                    f"{str(pageSize)}"
+                    "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted&fq=core.lastModified%3A%5B"
+                    f"{fromDate}"
+                    ".000Z%20TO%20"
+                    f"{toDate}"
+                    ".000Z%5D"
                 )
 
                 # print('single url : \n'+singleURL)
@@ -214,16 +214,16 @@ def generateCSV(hits, EDC_headers, EDC_Auth):
                             # str(pageSize) +'&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted&fq=core.lastModified%3A%5B'+fromDate+'.000Z%20TO%20'+toDate+'.000Z%5D'
                             offsetUrl = (
                                 "/access/2/catalog/data/search?basicQuery=*&tabId=all&fq=%7B!tag%3Dresource_name%7Dcore.resourceName%3A%22"
-                                + resourceName
-                                + "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesColumnName%22&facet=false&defaultFacets=true&highlight=false&offset="
-                                + str(pageSeizeOffset)
-                                + "&pageSize="
-                                + str(pageSize)
-                                + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted&fq=core.lastModified%3A%5B"
-                                + fromDate
-                                + ".000Z%20TO%20"
-                                + toDate
-                                + ".000Z%5D"
+                                f"{resourceName}"
+                                "%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesPath%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesFileName%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22DataFile.Custom.Upload.FilesColumnName%22&facet=false&defaultFacets=true&highlight=false&offset="
+                                f"{str(pageSeizeOffset)}"
+                                "&pageSize="
+                                f"{str(pageSize)}"
+                                "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted&fq=core.lastModified%3A%5B"
+                                f"{fromDate}"
+                                ".000Z%20TO%20"
+                                f"{toDate}"
+                                ".000Z%5D"
                             )
 
                             # print('DEBUG offset url : \n'+offsetUrl)

@@ -82,12 +82,12 @@ def dataFileLookup():
                 #       pageSeizeOffset)
                 offsetUrl = (
                     "/2/catalog/data/search?basicQuery=*&tabId=tab.resources&fq=%7B!tag%3Dresource_type%7Dcore.resourceType%3A%22DataFile%22&fq=%7B!tag%3Dall_class_type%7Dcore.allclassTypes%3A%22core.Resource%22&fq="
-                    + val_DGR
-                    + "&facet=false&defaultFacets=true&highlight=false&offset="
-                    + str(pageSeizeOffset)
-                    + "&pageSize="
-                    + str(pageSize)
-                    + "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
+                    f"{val_DGR}"
+                    "&facet=false&defaultFacets=true&highlight=false&offset="
+                    f"{str(pageSeizeOffset)}"
+                    "&pageSize="
+                    f"{str(pageSize)}"
+                    "&includeRefObjects=true&fq=-com.infa.ldm.axon.status:Deleted"
                 )
                 newUrlMain = EDC_URL_REST_2 + offsetUrl
 
@@ -126,7 +126,7 @@ def dataFileLookup():
                 if column != "path id" and column != "id" and column != "Name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             output_path = os.path.join(csv_path + "/DATAFILE_FILES.csv")
             df.to_csv(output_path, mode="a", sep=";", index=False, header=not os.path.exists(output_path))
             downloaded = downloaded + 1
@@ -140,7 +140,7 @@ def dataFileLookup():
                 if column != "File id" and column != "id" and column != "name":
                     df[column] = df[column].apply(lambda x: BeautifulSoup(x, "lxml").get_text())
                     for i in chars_to_remove:
-                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)
+                        df = df.applymap(lambda x: x.replace(i, "") if (isinstance(x, str)) else x)  # type: ignore
             output_path = os.path.join(csv_path + "/DATAFILE_FILE_COLUMNS.csv")
             df.to_csv(output_path, mode="a", sep=";", index=False, header=not os.path.exists(output_path))
             downloaded = downloaded + 1
@@ -210,13 +210,13 @@ def generateCSV(hits, EDC_headers, EDC_Auth):
                 logging.info(f"Working on {resourceName}")
                 fromDate = Last_Run_read.get(resourceName)
                 singleURL = (
-                    EDC_URL_REST_2
-                    + "/2/catalog/data/app_events?resourceName="
-                    + resourceName
-                    + "&offset=0&pageSize="
-                    + str(pageSize)
-                    + "&sortBy=createdOn&responseType=DETAILED&changeType=SOURCE&since="
-                    + str(fromDate)
+                    f"{EDC_URL_REST_2}"
+                    "/2/catalog/data/app_events?resourceName="
+                    f"{resourceName}"
+                    "&offset=0&pageSize="
+                    f"{str(pageSize)}"
+                    "&sortBy=createdOn&responseType=DETAILED&changeType=SOURCE&since="
+                    f"{str(fromDate)}"
                 )
                 resp2 = session.get(singleURL, headers=EDC_headers, auth=EDC_Auth)
                 # print('rest 19 datafile lookup: ', singleURL)
@@ -235,13 +235,13 @@ def generateCSV(hits, EDC_headers, EDC_Auth):
                         while totalCount > pageSeizeOffset:
                             offsetUrl = (
                                 "/2/catalog/data/app_events?resourceName="
-                                + resourceName
-                                + "&offset="
-                                + str(pageSeizeOffset)
-                                + "&pageSize="
-                                + str(pageSize)
-                                + "&sortBy=createdOn&responseType=DETAILED&changeType=SOURCE&since="
-                                + str(fromDate)
+                                f"{resourceName}"
+                                "&offset="
+                                f"{str(pageSeizeOffset)}"
+                                "&pageSize="
+                                f"{str(pageSize)}"
+                                "&sortBy=createdOn&responseType=DETAILED&changeType=SOURCE&since="
+                                f"{str(fromDate)}"
                             )
                             newUrlMain = EDC_URL_REST_2 + offsetUrl
                             newResp = session.get(newUrlMain, headers=EDC_headers, auth=EDC_Auth)
@@ -333,7 +333,7 @@ def genLookupCSV(hits):
 
 
 def LookupFileNameCSV(childId, EDC_headers, EDC_Auth):
-    dstLinksTb = []
+    # dstLinksTb = []
     childId = childId.replace("\\", "/")
     idLookup_1 = childId.replace("/", "~2f~")
     idLookup = idLookup_1.replace(":", "~3a~")
@@ -352,7 +352,7 @@ def LookupFileNameCSV(childId, EDC_headers, EDC_Auth):
 
 
 def LookupFileColumnsCSV(childId, EDC_headers, EDC_Auth):
-    dstLinksTb = []
+    # dstLinksTb = []
     childId = childId.replace("\\", "/")
     idLookup_1 = childId.replace("/", "~2f~")
     idLookup = idLookup_1.replace(":", "~3a~")

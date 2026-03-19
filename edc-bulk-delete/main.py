@@ -179,7 +179,7 @@ if __name__ == "__main__":
                         logging.error(status)  # log
 
                         # Sent email on end of activities
-                        emailText = f"Si comunica che la risorsa {resourceName} e' stata skippata dal processo perche' rimasta troppo tempo in stato {status['status']}. Verificare la causa. \r\nNOTA: Verificare il corretto completamento del run e, al termine, la corretta impostazione del flag 'SaveSourceData' a 'true'. Modificarne il valore manualmente se necessario."
+                        emailText = f"Si comunica che la risorsa [{resourceName}] è stata skippata dal processo perché rimasta troppo tempo in stato [{status['status']}]. Verificare la causa. \r\nNOTA: Verificare il corretto completamento del run e, al termine, la corretta impostazione del flag 'SaveSourceData' a 'true'. Modificarne il valore manualmente se necessario."
                         emailSub = "EDC - processo di cancellazione automatica sample dei dati - segnalazione errore"
                         sendMail(emailSub, emailText)
 
